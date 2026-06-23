@@ -2,7 +2,11 @@
 import Icon from '../core/Icon.astro';
 import Button from '../core/Button.astro';
 import ProductCard from './ProductCard.astro';
-import { PRODUCTS, FILTERS } from '../../data/catalog';
+import { getProducts, getCategories } from '../../lib/catalog';
+
+const products = await getProducts();
+const categories = await getCategories();
+const FILTERS = ['Todos', ...categories.map((c) => c.nome)];
 ---
 <section class="hm-section" id="produtos">
   <div class="hm-sectionhead" data-reveal>
@@ -22,7 +26,7 @@ import { PRODUCTS, FILTERS } from '../../data/catalog';
   </div>
 
   <div class="hm-products" id="hm-products" data-reveal-stagger>
-    {PRODUCTS.map((p) => <ProductCard product={p} />)}
+    {products.map((p) => <ProductCard product={p} />)}
   </div>
 </section>
 

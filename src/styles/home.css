@@ -136,8 +136,8 @@
 .hm-prod[hidden]{display:none}
 /* link esticado: o card inteiro abre a página do produto */
 .hm-prod__link{position:absolute;inset:0;z-index:1}
-.hm-prod__imgwrap{position:relative;height:230px;overflow:hidden;background:#000}
-.hm-prod__img{width:100%;height:100%;object-fit:cover;transition:transform var(--dur-slow) var(--ease-out)}
+.hm-prod__imgwrap{position:relative;height:230px;overflow:hidden;background:#fff;padding:14px}
+.hm-prod__img{width:100%;height:100%;object-fit:contain;transition:transform var(--dur-slow) var(--ease-out)}
 .hm-prod:hover .hm-prod__img{transform:scale(1.05)}
 .hm-prod__tags{position:absolute;top:14px;left:14px;display:flex;flex-direction:column;gap:6px;align-items:flex-start;z-index:2}
 .hm-prod__body{padding:18px 20px 20px;display:flex;flex-direction:column;flex:1}

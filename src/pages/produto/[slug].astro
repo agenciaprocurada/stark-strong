@@ -6,23 +6,22 @@ import CategoryNav from '../../components/home/CategoryNav.astro';
 import StoreFooter from '../../components/home/StoreFooter.astro';
 import ProductCard from '../../components/home/ProductCard.astro';
 import Icon from '../../components/core/Icon.astro';
-import Badge from '../../components/core/Badge.astro';
 import Button from '../../components/core/Button.astro';
-import { PRODUCTS } from '../../data/catalog';
-import type { Product } from '../../data/catalog';
+import { getProducts, getRelated, type ViewProduct } from '../../lib/catalog';
 import '../../styles/home.css';
 import '../../styles/produto.css';
 
-export function getStaticPaths() {
-  return PRODUCTS.map((p) => ({ params: { slug: p.slug }, props: { product: p } }));
+export async function getStaticPaths() {
+  const products = await getProducts();
+  return products.map((p) => ({ params: { slug: p.slug }, props: { product: p } }));
 }
 
-interface Props { product: Product; }
+interface Props { product: ViewProduct; }
 const { product: p } = Astro.props;
 
-const chips = p.spec.split('·').map((s) => s.trim()).filter(Boolean);
+const chips = p.chips;
 const gallery = p.gallery && p.gallery.length ? p.gallery : [p.img];
-const related = PRODUCTS.filter((x) => x.category === p.category && x.id !== p.id).slice(0, 3);
+const related = await getRelated(p, 3);
 
 const guarantees = [
   ['truck', 'Entrega para todo o Brasil', 'Logística especializada em maquinário'],
@@ -30,7 +29,7 @@ const guarantees = [
   ['shield-check', 'Garantia de 5 anos', 'Na estrutura · suporte técnico próprio'],
 ] as const;
 ---
-<BaseLayout title={`${p.name} — Stark Strong`} description={p.tagline ?? p.spec}>
+<BaseLayout title={`${p.name} — Stark Strong`} description={p.spec}>
   <TopBar />
   <Header />
   <CategoryNav />
@@ -50,7 +49,6 @@ const guarantees = [
       <div class="pd-gallery">
         <div class="pd-gallery__main">
           <span class="pd-gallery__seam"></span>
-          {p.tag && <span class="pd-gallery__tag"><Badge variant="gold">{p.tag}</Badge></span>}
           <img id="pd-main" src={gallery[0]} alt={p.name} />
         </div>
         {gallery.length > 1 && (
@@ -69,11 +67,9 @@ const guarantees = [
         <h1 class="pd-info__title">{p.name}</h1>
 
         <div class="pd-info__trust">
-          {p.tag && <span class="ss-badge ss-badge--gold">{p.tag}</span>}
-          <span class="pd-info__proof"><Icon name="building-2" size={15} color="var(--accent)" />{p.reviews}+ academias equipadas</span>
+          {p.ref && <span class="ss-badge ss-badge--gold">Ref. {p.ref}</span>}
+          <span class="pd-info__proof"><Icon name="building-2" size={15} color="var(--accent)" />Stark Strong · linha profissional</span>
         </div>
-
-        {p.tagline && <p class="pd-info__tagline">{p.tagline}</p>}
 
         {chips.length > 0 && (
           <ul class="pd-specchips">
@@ -114,34 +110,21 @@ const guarantees = [
       </div>
     </section>
 
-    <!-- Descrição + destaques -->
-    {(p.description || p.highlights) && (
+    <!-- Descrição -->
+    {p.description.length > 0 && (
       <section class="pd-section">
         <div class="pd-overview">
-          {p.description && (
-            <div class="pd-overview__copy">
-              <p class="u-overline">Sobre o equipamento</p>
-              <h2 class="hm-title">ENGENHARIA <span>QUE SE SENTE</span></h2>
-              {p.description.map((d) => <p class="pd-overview__p">{d}</p>)}
-            </div>
-          )}
-          {p.highlights && (
-            <div class="pd-highlights">
-              {p.highlights.map((h) => (
-                <div class="pd-highlight">
-                  <span class="pd-highlight__ic"><Icon name={h.icon} size={22} color="var(--accent)" /></span>
-                  <h3>{h.title}</h3>
-                  <p>{h.text}</p>
-                </div>
-              ))}
-            </div>
-          )}
+          <div class="pd-overview__copy">
+            <p class="u-overline">Sobre o equipamento</p>
+            <h2 class="hm-title">ENGENHARIA <span>QUE SE SENTE</span></h2>
+            {p.description.map((d) => <p class="pd-overview__p">{d}</p>)}
+          </div>
         </div>
       </section>
     )}
 
     <!-- Ficha técnica -->
-    {p.specs && (
+    {p.specs.length > 0 && (
       <section class="pd-section pd-section--dark">
         <div class="pd-specs">
           <div class="pd-specs__head">

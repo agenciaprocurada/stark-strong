@@ -1,25 +1,21 @@
 ---
 import Icon from '../core/Icon.astro';
-import Badge from '../core/Badge.astro';
 import Card from '../core/Card.astro';
 import Button from '../core/Button.astro';
-import type { Product } from '../../data/catalog';
+import type { ViewProduct } from '../../lib/catalog';
 
-interface Props { product: Product; }
+interface Props { product: ViewProduct; }
 const { product: p } = Astro.props;
 ---
 <Card variant="default" interactive class="hm-prod" data-cat={p.category}>
   <a class="hm-prod__link" href={`/produto/${p.slug}`} aria-label={`Ver ${p.name}`}></a>
   <div class="hm-prod__imgwrap">
     <img class="hm-prod__img" src={p.img} alt={p.name} loading="lazy" />
-    <div class="hm-prod__tags">
-      {p.tag && <Badge variant="gold">{p.tag}</Badge>}
-    </div>
   </div>
   <div class="hm-prod__body">
     <p class="hm-prod__cat">{p.category}</p>
     <h3 class="hm-prod__name">{p.name}</h3>
-    <p class="hm-prod__trust"><Icon name="building-2" size={14} />{p.reviews}+ academias equipadas</p>
+    <p class="hm-prod__trust"><Icon name="building-2" size={14} />Stark Strong · linha profissional</p>
     <p class="hm-prod__spec"><Icon name="settings-2" size={15} />{p.spec}</p>
     <div class="hm-prod__actions">
       <Button
