@@ -1,0 +1,46 @@
+---
+import Icon from '../core/Icon.astro';
+import { CATEGORIES } from '../../data/catalog';
+---
+<header class="hm-header">
+  <button class="hm-burger" type="button" data-burger aria-label="Abrir menu" aria-expanded="false" aria-controls="hm-mobnav">
+    <Icon name="menu" size={22} />
+  </button>
+  <a class="hm-logo" href="/"><img src="/assets/logo-negative.png" alt="Stark Strong" /></a>
+  <form class="hm-search" onsubmit="return false">
+    <Icon name="search" size={18} color="var(--text-on-dark-muted)" />
+    <input placeholder="Buscar equipamentos, linhas, acessórios..." aria-label="Buscar" />
+    <button class="hm-search__btn" type="submit" aria-label="Buscar"><Icon name="search" size={16} /></button>
+  </form>
+  <div class="hm-actions">
+    <button class="hm-iconbtn" type="button" data-oc-open>
+      <Icon name="clipboard-list" size={20} />
+      <span class="hm-cartcount" data-oc-count hidden>0</span>
+      <span>Orçamento</span>
+    </button>
+  </div>
+</header>
+
+<div class="hm-mobnav" id="hm-mobnav" hidden>
+  <form class="hm-mobnav__search" onsubmit="return false">
+    <Icon name="search" size={18} color="var(--text-on-dark-muted)" />
+    <input placeholder="Buscar equipamentos..." aria-label="Buscar" />
+  </form>
+  <nav class="hm-mobnav__cats">
+    {CATEGORIES.map((c) => <a href="#produtos" data-mobnav-link>{c}</a>)}
+  </nav>
+  <a class="hm-mobnav__phone" href="tel:+551140002025"><Icon name="headset" size={16} color="var(--accent)" /> Atendimento (11) 4000-2025</a>
+</div>
+
+<script>
+  const burger = document.querySelector<HTMLElement>('[data-burger]');
+  const nav = document.getElementById('hm-mobnav');
+  if (burger && nav) {
+    const toggle = (open: boolean) => {
+      nav.hidden = !open;
+      burger.setAttribute('aria-expanded', String(open));
+    };
+    burger.addEventListener('click', () => toggle(nav.hidden));
+    nav.querySelectorAll('[data-mobnav-link]').forEach((l) => l.addEventListener('click', () => toggle(false)));
+  }
+</script>

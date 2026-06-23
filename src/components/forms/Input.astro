@@ -1,0 +1,19 @@
+---
+/* Stark Strong — input com label. */
+interface Props {
+  label?: string;
+  hint?: string;
+  error?: string;
+  onDark?: boolean;
+  id?: string;
+  class?: string;
+  [key: string]: unknown;
+}
+const { label, hint, error, onDark = false, id, class: cls = '', ...rest } = Astro.props;
+const fid = id || `ss-in-${Math.random().toString(36).slice(2, 8)}`;
+---
+<div class:list={['ss-field', error && 'ss-field--error', onDark && 'ss-field--dark', cls]}>
+  {label && <label class="ss-field__label" for={fid}>{label}</label>}
+  <input id={fid} class="ss-field__input" {...rest} />
+  {(error || hint) && <span class="ss-field__msg">{error || hint}</span>}
+</div>

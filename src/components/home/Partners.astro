@@ -1,0 +1,25 @@
+---
+const logos = Array.from({ length: 31 }, (_, i) => {
+  const n = String(i + 1).padStart(2, '0');
+  return `/assets/partners/parceiro_${n}.png`;
+});
+// duplica a lista para o loop infinito ficar contínuo
+const track = [...logos, ...logos];
+---
+<section class="hm-section" style="padding-top:0">
+  <div class="hm-sectionhead" data-reveal>
+    <div>
+      <p class="u-overline">Quem treina com a gente</p>
+      <h2 class="hm-title">PARCEIROS QUE <span>CONFIAM</span></h2>
+    </div>
+  </div>
+  <div class="hm-logos" data-reveal="zoom">
+    <div class="hm-logos__track">
+      {track.map((src) => (
+        <div class="hm-logos__item">
+          <img src={src} alt="Logo de parceiro" loading="lazy" />
+        </div>
+      ))}
+    </div>
+  </div>
+</section>

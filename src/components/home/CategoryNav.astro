@@ -1,0 +1,8 @@
+---
+import Icon from '../core/Icon.astro';
+import { CATEGORIES } from '../../data/catalog';
+---
+<nav class="hm-cats">
+  {CATEGORIES.map((c) => <a class="hm-cats__link" href="#produtos">{c}</a>)}
+  <span class="hm-cats__phone"><Icon name="headset" size={16} color="var(--accent)" /> Atendimento <b>(11) 4000-2025</b></span>
+</nav>

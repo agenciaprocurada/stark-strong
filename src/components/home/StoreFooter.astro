@@ -1,0 +1,42 @@
+---
+import Icon from '../core/Icon.astro';
+
+const cols = [
+  ['Institucional', ['Sobre a Stark Strong', 'Nossa tecnologia', 'Trabalhe conosco', 'Blog']],
+  ['Atendimento', ['Central de ajuda', 'Como funciona o orçamento', 'Frete e entrega', 'Garantia']],
+] as const;
+const steps = ['Projeto', 'Fabricação', 'Logística', 'Instalação', 'Suporte'];
+---
+<footer class="hm-footer">
+  <div class="hm-footer__top">
+    <div class="hm-footer__brand">
+      <img src="/assets/logo-negative.png" alt="Stark Strong" />
+      <p>Equipamentos de musculação profissional. A performance é inevitável — do projeto à instalação da sua academia.</p>
+      <div class="hm-footer__social">
+        <a aria-label="Instagram"><Icon name="instagram" size={17} /></a>
+        <a aria-label="YouTube"><Icon name="youtube" size={17} /></a>
+        <a aria-label="WhatsApp"><Icon name="message-circle" size={17} /></a>
+      </div>
+    </div>
+    {cols.map(([h, links]) => (
+      <div class="hm-footer__col">
+        <h4>{h}</h4>
+        {links.map((l) => <a>{l}</a>)}
+      </div>
+    ))}
+    <div class="hm-footer__col hm-footer__contact">
+      <h4>Contato</h4>
+      <span><Icon name="map-pin" size={16} color="var(--accent)" /> São Paulo · SP — atendemos todo o Brasil</span>
+      <span><Icon name="phone" size={16} color="var(--accent)" /> (11) 4000-2025</span>
+      <span><Icon name="mail" size={16} color="var(--accent)" /> contato@starkstrong.com.br</span>
+      <span><Icon name="clock" size={16} color="var(--accent)" /> Seg a Sex · 9h às 18h</span>
+    </div>
+  </div>
+  <div class="hm-footer__pay">
+    <div class="hm-footer__steps">
+      {steps.map((s) => <span class="hm-paychip">{s}</span>)}
+    </div>
+    <span class="hm-footer__secure"><Icon name="shield-check" size={15} color="var(--accent)" /> Solução end-to-end · suporte próprio</span>
+  </div>
+  <div class="hm-footer__bottom">© 2025 Stark Strong · CNPJ 00.000.000/0001-00 · Todos os direitos reservados · A performance é inevitável.</div>
+</footer>

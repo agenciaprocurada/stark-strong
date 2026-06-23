@@ -1,0 +1,62 @@
+/* Stark Strong — Color tokens
+   Source: Brandbook p.07 "Paleta de Cores" */
+:root {
+  /* ---- Brand palette (raw) ---- */
+  --color-preto-carbono:   #111111; /* Preto Carbono  */
+  --color-grafite:         #1E1E1E; /* Grafite        */
+  --color-cinza-concreto:  #D8D3CB; /* Cinza Concreto */
+  --color-off-white:       #F3F1EC; /* Off White      */
+  --color-dourado:         #B9914B; /* Dourado Performance */
+  --color-dourado-claro:   #C7A56A; /* Dourado Claro  */
+
+  /* Extended neutrals (derived for UI depth) */
+  --color-ink-900: #0C0C0C;
+  --color-ink-800: #111111;
+  --color-ink-700: #1E1E1E;
+  --color-ink-600: #2A2A2A;
+  --color-ink-500: #3A3A38;
+  --color-stone-400: #8A857C;
+  --color-stone-300: #B7B2A8;
+  --color-stone-200: #D8D3CB;
+  --color-stone-100: #E8E5DE;
+  --color-stone-50:  #F3F1EC;
+  --color-white:     #FFFFFF;
+
+  /* Gold tints/shades */
+  --color-dourado-700: #8F6E36;
+  --color-dourado-300: #D8BC8A;
+
+  /* ---- Semantic: surfaces ---- */
+  --bg-base:          var(--color-off-white);   /* light textured page   */
+  --bg-base-alt:      var(--color-cinza-concreto);
+  --bg-dark:          var(--color-preto-carbono);/* dark sections / footer */
+  --bg-dark-alt:      var(--color-grafite);
+  --surface-card:        var(--color-white);
+  --surface-card-dark:   var(--color-grafite);
+  --surface-sunken:      #EAE7E0;
+
+  /* ---- Semantic: text ---- */
+  --text-strong:   var(--color-preto-carbono); /* headlines on light  */
+  --text-body:     #2A2A28;                     /* body on light       */
+  --text-muted:    #6E6A62;                     /* captions / labels   */
+  --text-on-dark:        var(--color-off-white);
+  --text-on-dark-muted:  #B0ABA1;
+  --text-accent:   var(--color-dourado);
+
+  /* ---- Semantic: accent ---- */
+  --accent:         var(--color-dourado);
+  --accent-bright:  var(--color-dourado-claro);
+  --accent-press:   var(--color-dourado-700);
+
+  /* ---- Borders & lines ---- */
+  --border-subtle:    #D8D3CB;          /* hairline on light          */
+  --border-strong:    #1E1E1E;
+  --border-gold:      var(--color-dourado); /* thin gold rule (motif) */
+  --border-on-dark:   rgba(255,255,255,0.10);
+
+  /* ---- Status (functional, derived to fit palette) ---- */
+  --status-success: #5B8C5A;
+  --status-warning: var(--color-dourado);
+  --status-danger:  #B4452F;
+  --status-info:    #4A6275;
+}

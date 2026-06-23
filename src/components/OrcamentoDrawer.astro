@@ -1,0 +1,22 @@
+---
+/* Painel de orçamento + overlay + toast. Conteúdo interno é renderizado via JS. */
+import Icon from './core/Icon.astro';
+---
+<div class="oc-overlay" id="oc-overlay"></div>
+
+<aside class="oc-drawer" id="oc-drawer" aria-label="Orçamento" aria-hidden="true">
+  <div class="oc-head">
+    <span class="oc-head__rule"></span>
+    <div>
+      <p>Sua lista</p>
+      <h2>Orçamento</h2>
+    </div>
+    <button class="oc-close" data-oc-close aria-label="Fechar"><Icon name="x" size={20} /></button>
+  </div>
+  <div id="oc-content"></div>
+</aside>
+
+<div class="hm-toast" id="hm-toast" role="status" aria-live="polite">
+  <Icon name="check-circle" size={18} color="var(--accent)" />
+  <span data-toast-msg></span>
+</div>

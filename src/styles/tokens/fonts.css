@@ -1,0 +1,10 @@
+/* Stark Strong — Webfonts
+   Brand spec (Brandbook p.07):
+     Títulos    → League Spartan Bold / CAIXA ALTA
+     Subtítulos → Montserrat SemiBold
+     Corpo      → Inter Regular
+   NOTE: o wordmark do logo STARK STRONG é uma fonte stencil militar custom
+   (não fornecida). O logo é entregue como raster (public/assets/logo-*.png).
+   League Spartan é usada para os títulos em texto vivo. */
+
+@import url('https://fonts.googleapis.com/css2?family=League+Spartan:wght@400;500;600;700;800;900&family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700&display=swap');

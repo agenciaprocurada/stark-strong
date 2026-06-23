@@ -1,0 +1,23 @@
+---
+/* Stark Strong — superfície quadrada com hairline border. */
+interface Props {
+  variant?: 'default' | 'elevated' | 'dark' | 'gold';
+  accent?: boolean;
+  interactive?: boolean;
+  class?: string;
+  [key: string]: unknown;
+}
+const { variant = 'default', accent = false, interactive = false, class: cls = '', ...rest } = Astro.props;
+---
+<div
+  class:list={[
+    'ss-card',
+    variant !== 'default' && `ss-card--${variant}`,
+    accent && 'ss-card--accent',
+    interactive && 'ss-card--interactive',
+    cls,
+  ]}
+  {...rest}
+>
+  <slot />
+</div>

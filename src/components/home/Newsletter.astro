@@ -1,0 +1,39 @@
+---
+import Icon from '../core/Icon.astro';
+import Button from '../core/Button.astro';
+---
+<section class="hm-section hm-section--dark">
+  <div class="hm-news">
+    <div>
+      <p class="u-overline" style="color:var(--text-on-dark-muted)">Newsletter Stark Strong</p>
+      <h2 class="hm-title">NOVIDADES E <span>CONTEÚDO</span><br />ANTES DE TODO MUNDO</h2>
+      <p class="hm-news__note" style="font-size:15px;line-height:1.6;max-width:420px;margin-top:16px">
+        Lançamentos, condições exclusivas e conteúdo técnico direto no seu e-mail. Sem spam.
+      </p>
+    </div>
+    <div>
+      <form class="hm-news__form" id="hm-news-form" novalidate>
+        <div class="ss-field ss-field--dark">
+          <input class="ss-field__input" type="email" placeholder="seu@email.com.br" required aria-label="E-mail" />
+        </div>
+        <Button variant="primary" size="lg" type="submit">Inscrever</Button>
+      </form>
+      <div class="hm-news__ok" id="hm-news-ok" hidden>
+        <Icon name="check-circle" size={28} color="var(--accent)" />
+        <b>Inscrição confirmada. Bem-vindo à força.</b>
+      </div>
+      <p class="hm-news__note">Ao se inscrever você concorda com a política de privacidade.</p>
+    </div>
+  </div>
+</section>
+
+<script>
+  const form = document.getElementById('hm-news-form') as HTMLFormElement | null;
+  const ok = document.getElementById('hm-news-ok');
+  form?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (!form.reportValidity()) return;
+    form.hidden = true;
+    if (ok) ok.hidden = false;
+  });
+</script>

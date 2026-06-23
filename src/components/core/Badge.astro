@@ -1,0 +1,14 @@
+---
+/* Stark Strong — tag/label em caixa alta. */
+interface Props {
+  variant?: 'gold' | 'outline' | 'ink' | 'gold-outline';
+  dot?: boolean;
+  class?: string;
+  [key: string]: unknown;
+}
+const { variant = 'outline', dot = false, class: cls = '', ...rest } = Astro.props;
+---
+<span class:list={['ss-badge', `ss-badge--${variant}`, cls]} {...rest}>
+  {dot && <span class="ss-badge__dot"></span>}
+  <slot />
+</span>

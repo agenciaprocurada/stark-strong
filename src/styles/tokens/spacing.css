@@ -1,0 +1,53 @@
+/* Stark Strong — Spacing, radii, shadows, motion
+   Aesthetic: squared, engineered, sharp corners + thin gold hairlines.
+   Cards are near-rectangular with hairline borders; depth via subtle shadow. */
+:root {
+  /* Spacing scale (4px base) */
+  --space-0: 0;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+
+  /* Radii — intentionally tight; the brand reads engineered/industrial */
+  --radius-none: 0;
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
+  --radius-pill: 999px;
+
+  /* Borders */
+  --border-w-hairline: 1px;
+  --border-w-strong: 2px;
+  --border-w-accent: 3px;   /* gold left-rule accent on headings */
+
+  /* Shadows — restrained; "áreas escuras com profundidade" */
+  --shadow-xs: 0 1px 2px rgba(17,17,17,0.06);
+  --shadow-sm: 0 2px 8px rgba(17,17,17,0.08);
+  --shadow-md: 0 8px 24px rgba(17,17,17,0.12);
+  --shadow-lg: 0 18px 48px rgba(17,17,17,0.18);
+  --shadow-on-dark: 0 12px 40px rgba(0,0,0,0.55);
+
+  /* Motion */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast: 120ms;
+  --dur-base: 200ms;
+  --dur-slow: 320ms;
+
+  /* Layout */
+  --container-max: 1200px;
+  --footer-h: 56px;
+
+  /* Signature gradients/textures */
+  --gold-rule: linear-gradient(90deg, var(--color-dourado), var(--color-dourado-claro));
+  --diagonal-cut: polygon(12% 0, 100% 0, 100% 100%, 0 100%); /* recorte diagonal */
+}

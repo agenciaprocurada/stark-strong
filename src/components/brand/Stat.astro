@@ -1,0 +1,21 @@
+---
+/* Stark Strong — métrica dourada grande + label (ex.: "45° / COM GUIAS LINEARES"). */
+interface Props {
+  value: string;
+  label?: string;
+  sublabel?: string;
+  size?: 'sm' | 'md' | 'lg';
+  onDark?: boolean;
+  class?: string;
+}
+const { value, label, sublabel, size = 'md', onDark = false, class: cls = '' } = Astro.props;
+---
+<div class:list={['ss-stat', size !== 'md' && `ss-stat--${size}`, onDark && 'ss-stat--dark', cls]}>
+  <span class="ss-stat__value">{value}</span>
+  {(label || sublabel) && (
+    <span class="ss-stat__label">
+      {label && <span class="ss-stat__lead">{label}</span>}
+      {sublabel && <span class="ss-stat__sub">{sublabel}</span>}
+    </span>
+  )}
+</div>

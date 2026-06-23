@@ -1,0 +1,27 @@
+---
+/* Stark Strong — ícone + título + corpo (card de pilar/atributo). */
+import Icon from '../core/Icon.astro';
+
+interface Props {
+  icon?: string;
+  title?: string;
+  onDark?: boolean;
+  capsule?: boolean;
+  labelStyle?: boolean;
+  class?: string;
+}
+const { icon, title, onDark = false, capsule = false, labelStyle = false, class: cls = '' } = Astro.props;
+---
+<div
+  class:list={[
+    'ss-feature',
+    onDark && 'ss-feature--dark',
+    capsule && 'ss-feature--capsule',
+    labelStyle && 'ss-feature--label',
+    cls,
+  ]}
+>
+  {icon && <div class="ss-feature__icon"><Icon name={icon} size={26} color="var(--accent)" /></div>}
+  {title && <h3 class="ss-feature__title">{title}</h3>}
+  <p class="ss-feature__body"><slot /></p>
+</div>

@@ -1,0 +1,24 @@
+---
+/* Stark Strong — título de seção: gold rule + número dourado + 2ª linha dourada. */
+interface Props {
+  number?: string;
+  overline?: string;
+  title: string;
+  accentTitle?: string;
+  size?: 'sm' | 'md' | 'lg';
+  onDark?: boolean;
+  class?: string;
+}
+const { number, overline, title, accentTitle, size = 'md', onDark = false, class: cls = '' } = Astro.props;
+---
+<div class:list={['ss-head', onDark && 'ss-head--dark', size !== 'md' && `ss-head--${size}`, cls]}>
+  <div class="ss-head__rule"></div>
+  <div>
+    {overline && <p class="ss-head__overline">{overline}</p>}
+    <h2 class="ss-head__title">
+      {number && <span class="ss-head__num">{number}</span>}
+      {title}
+      {accentTitle && (<><br /><span class="ss-head__accent">{accentTitle}</span></>)}
+    </h2>
+  </div>
+</div>

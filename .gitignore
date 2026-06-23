@@ -1,0 +1,16 @@
+# build output
+dist/
+# generated types
+.astro/
+# dependencies
+node_modules/
+# logs
+npm-debug.log*
+# environment
+.env
+.env.production
+# os
+.DS_Store
+Thumbs.db
+# design reference (temporária — será removida)
+_design-claude/

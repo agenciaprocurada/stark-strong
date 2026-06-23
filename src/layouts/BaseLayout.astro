@@ -1,0 +1,55 @@
+---
+/* Stark Strong — layout base da loja. */
+import '../styles/global.css';
+import '../styles/orcamento.css';
+import OrcamentoDrawer from '../components/OrcamentoDrawer.astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+const {
+  title = 'Stark Strong — Equipamentos de musculação profissional',
+  description = 'Equipamentos de musculação profissional. Biomecânica precisa, durabilidade superior e design premium. Monte seu orçamento — sem compromisso.',
+} = Astro.props;
+---
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/png" href="/assets/logo-positive.png" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <script is:inline>
+      /* Reveal no scroll. Só liga o movimento quando o usuário aceita.
+         Sem JS / movimento reduzido / sem IntersectionObserver => tudo visível. */
+      (function () {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        document.documentElement.classList.add('reveal-ready');
+        function init() {
+          var els = document.querySelectorAll('[data-reveal],[data-reveal-stagger]');
+          if (!('IntersectionObserver' in window)) {
+            els.forEach(function (el) { el.classList.add('is-in'); });
+            return;
+          }
+          var io = new IntersectionObserver(function (entries) {
+            entries.forEach(function (e) {
+              if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); }
+            });
+          }, { threshold: 0.12, rootMargin: '0px 0px -6% 0px' });
+          els.forEach(function (el) { io.observe(el); });
+        }
+        if (document.readyState !== 'loading') init();
+        else document.addEventListener('DOMContentLoaded', init);
+      })();
+    </script>
+  </head>
+  <body>
+    <slot />
+    <OrcamentoDrawer />
+    <script>
+      import '../scripts/orcamento.ts';
+    </script>
+  </body>
+</html>

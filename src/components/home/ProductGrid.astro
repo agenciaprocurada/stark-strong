@@ -1,0 +1,45 @@
+---
+import Icon from '../core/Icon.astro';
+import Button from '../core/Button.astro';
+import ProductCard from './ProductCard.astro';
+import { PRODUCTS, FILTERS } from '../../data/catalog';
+---
+<section class="hm-section" id="produtos">
+  <div class="hm-sectionhead" data-reveal>
+    <div>
+      <p class="u-overline">Catálogo · 2025</p>
+      <h2 class="hm-title">LINHA <span>PROFISSIONAL</span></h2>
+    </div>
+    <Button as="a" href="#produtos" variant="ghost" icon="arrow-right" iconRight>Ver tudo</Button>
+  </div>
+
+  <p class="hm-products__intro" data-reveal>Monte sua lista de equipamentos e solicite um orçamento único — sem preço público, sem compromisso. Adicione quantos quiser; a Stark Strong retorna com proposta e prazo.</p>
+
+  <div class="hm-filter" id="hm-filter" data-reveal>
+    {FILTERS.map((f, i) => (
+      <button class={`hm-chip${i === 0 ? ' is-active' : ''}`} type="button" data-filter={f}>{f}</button>
+    ))}
+  </div>
+
+  <div class="hm-products" id="hm-products" data-reveal-stagger>
+    {PRODUCTS.map((p) => <ProductCard product={p} />)}
+  </div>
+</section>
+
+<script>
+  const wrap = document.getElementById('hm-filter');
+  const grid = document.getElementById('hm-products');
+  if (wrap && grid) {
+    const cards = [...grid.querySelectorAll<HTMLElement>('.hm-prod')];
+    wrap.addEventListener('click', (e) => {
+      const chip = (e.target as HTMLElement).closest<HTMLElement>('[data-filter]');
+      if (!chip) return;
+      wrap.querySelectorAll('.hm-chip').forEach((c) => c.classList.remove('is-active'));
+      chip.classList.add('is-active');
+      const f = chip.dataset.filter;
+      cards.forEach((c) => {
+        c.hidden = f !== 'Todos' && c.dataset.cat !== f;
+      });
+    });
+  }
+</script>

@@ -1,0 +1,36 @@
+---
+import Icon from '../core/Icon.astro';
+import Badge from '../core/Badge.astro';
+import Button from '../core/Button.astro';
+import Card from '../core/Card.astro';
+
+const posts = [
+  ['Guia', '12 JUN 2025', 'Como escolher equipamentos para a sua academia', 'blog-01'],
+  ['Tecnologia', '03 JUN 2025', 'Biomecânica: por que o ângulo de 45° importa', 'blog-02'],
+  ['Manutenção', '21 MAI 2025', 'A rotina de cuidados que dobra a vida do equipamento', 'blog-03'],
+] as const;
+---
+<section class="hm-section" id="blog">
+  <div class="hm-sectionhead">
+    <div>
+      <p class="u-overline">Conteúdo</p>
+      <h2 class="hm-title">ÚLTIMAS <span>POSTAGENS</span></h2>
+    </div>
+    <Button as="a" href="#blog" variant="ghost" icon="arrow-right" iconRight>Ir para o blog</Button>
+  </div>
+  <div class="hm-posts">
+    {posts.map(([cat, date, title, ph]) => (
+      <Card variant="default" interactive class="hm-post">
+        <div class="hm-post__img">
+          <span class="hm-post__ph">{ph}.jpg</span>
+          <span class="hm-post__cat"><Badge variant="ink">{cat}</Badge></span>
+        </div>
+        <div class="hm-post__body">
+          <p class="hm-post__date">{date}</p>
+          <h3 class="hm-post__title">{title}</h3>
+          <span class="hm-post__more">Ler artigo <Icon name="arrow-up-right" size={15} color="var(--accent)" /></span>
+        </div>
+      </Card>
+    ))}
+  </div>
+</section>

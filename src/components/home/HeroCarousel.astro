@@ -1,0 +1,85 @@
+---
+import Icon from '../core/Icon.astro';
+import Button from '../core/Button.astro';
+
+const SLIDES = [
+  {
+    eyebrow: 'Linha profissional 2025',
+    title: [{ t: 'A LINHA QUE' }, { t: 'TRANSFORMA', gold: true }, { t: 'ACADEMIAS' }],
+    lead: 'Biomecânica precisa, aço estrutural e acabamento premium. Os equipamentos que viram referência de performance.',
+    img: 'photo-machine-hero.png',
+    primary: 'Solicitar orçamento',
+    secondary: 'Linha completa',
+  },
+  {
+    eyebrow: 'Tecnologia Stark Strong',
+    title: [{ t: 'BIOMECÂNICA', gold: true }, { t: 'QUE SE SENTE' }, { t: 'NA PRIMEIRA SÉRIE' }],
+    lead: 'Guias lineares, ângulos de 45° e curvas de resistência projetadas para resultado real — do iniciante ao avançado.',
+    img: 'photo-machine-rack.png',
+    primary: 'Conheça a tecnologia',
+    secondary: 'Falar com especialista',
+  },
+  {
+    eyebrow: 'Solução end-to-end',
+    title: [{ t: 'DO PROJETO' }, { t: 'À INSTALAÇÃO', gold: true }, { t: 'DA SUA ACADEMIA' }],
+    lead: 'Monte sua academia com a Stark Strong: projeto, fabricação, logística e instalação, com suporte próximo.',
+    img: 'photo-gym-dark.png',
+    primary: 'Montar orçamento',
+    secondary: 'Como funciona',
+  },
+];
+---
+<section class="hm-hero" id="hero">
+  {SLIDES.map((s, i) => (
+    <div class="hm-slide" data-slide={i} hidden={i !== 0}>
+      <div class="hm-slide__copy">
+        <p class="hm-slide__eyebrow"><span class="hm-topbar__sep"></span>{s.eyebrow}</p>
+        <h1 class="hm-slide__title">
+          {s.title.map((line, li) => (
+            <>
+              <span class={line.gold ? 'gold' : undefined}>{line.t}</span>
+              {li < s.title.length - 1 && <br />}
+            </>
+          ))}
+        </h1>
+        <p class="hm-slide__lead">{s.lead}</p>
+        <div class="hm-slide__actions">
+          <Button as="a" href="#produtos" variant="primary" size="lg" icon="arrow-right" iconRight>{s.primary}</Button>
+          <Button as="a" href="#produtos" variant="dark" size="lg">{s.secondary}</Button>
+        </div>
+      </div>
+      <div class="hm-slide__photo">
+        <span class="hm-slide__seam"></span>
+        <img src={`/assets/${s.img}`} alt="" />
+      </div>
+    </div>
+  ))}
+  <button class="hm-hero__arrow hm-hero__arrow--prev" data-hero-prev aria-label="Anterior"><Icon name="chevron-left" size={22} /></button>
+  <button class="hm-hero__arrow hm-hero__arrow--next" data-hero-next aria-label="Próximo"><Icon name="chevron-right" size={22} /></button>
+  <div class="hm-hero__dots">
+    {SLIDES.map((_, i) => <button class={`hm-dot${i === 0 ? ' is-active' : ''}`} data-hero-dot={i} aria-label={`Slide ${i + 1}`}></button>)}
+  </div>
+</section>
+
+<script>
+  const hero = document.getElementById('hero');
+  if (hero) {
+    const slides = [...hero.querySelectorAll<HTMLElement>('[data-slide]')];
+    const dots = [...hero.querySelectorAll<HTMLElement>('[data-hero-dot]')];
+    let i = 0;
+    let timer: number;
+    const show = (n: number) => {
+      i = (n + slides.length) % slides.length;
+      slides.forEach((s, si) => (s.hidden = si !== i));
+      dots.forEach((d, di) => d.classList.toggle('is-active', di === i));
+    };
+    const auto = () => {
+      window.clearInterval(timer);
+      timer = window.setInterval(() => show(i + 1), 6000);
+    };
+    hero.querySelector('[data-hero-prev]')?.addEventListener('click', () => { show(i - 1); auto(); });
+    hero.querySelector('[data-hero-next]')?.addEventListener('click', () => { show(i + 1); auto(); });
+    dots.forEach((d, di) => d.addEventListener('click', () => { show(di); auto(); }));
+    auto();
+  }
+</script>

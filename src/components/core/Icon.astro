@@ -1,0 +1,23 @@
+---
+/* Thin line icon — wraps Lucide via astro-icon (inline SVG, no client JS).
+   Uso: <Icon name="truck" size={18} color="var(--accent)" /> */
+import { Icon as Iconify } from 'astro-icon/components';
+
+interface Props {
+  name: string;
+  size?: number;
+  color?: string;
+  class?: string;
+  [key: string]: unknown;
+}
+
+const { name, size = 20, color, class: cls = '', ...rest } = Astro.props;
+---
+<Iconify
+  name={`lucide:${name}`}
+  width={size}
+  height={size}
+  class:list={['ss-icon', cls]}
+  style={color ? `color:${color}` : undefined}
+  {...rest}
+/>

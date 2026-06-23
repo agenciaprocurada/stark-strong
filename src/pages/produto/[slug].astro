@@ -1,0 +1,195 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import TopBar from '../../components/home/TopBar.astro';
+import Header from '../../components/home/Header.astro';
+import CategoryNav from '../../components/home/CategoryNav.astro';
+import StoreFooter from '../../components/home/StoreFooter.astro';
+import ProductCard from '../../components/home/ProductCard.astro';
+import Icon from '../../components/core/Icon.astro';
+import Badge from '../../components/core/Badge.astro';
+import Button from '../../components/core/Button.astro';
+import { PRODUCTS } from '../../data/catalog';
+import type { Product } from '../../data/catalog';
+import '../../styles/home.css';
+import '../../styles/produto.css';
+
+export function getStaticPaths() {
+  return PRODUCTS.map((p) => ({ params: { slug: p.slug }, props: { product: p } }));
+}
+
+interface Props { product: Product; }
+const { product: p } = Astro.props;
+
+const chips = p.spec.split('·').map((s) => s.trim()).filter(Boolean);
+const gallery = p.gallery && p.gallery.length ? p.gallery : [p.img];
+const related = PRODUCTS.filter((x) => x.category === p.category && x.id !== p.id).slice(0, 3);
+
+const guarantees = [
+  ['truck', 'Entrega para todo o Brasil', 'Logística especializada em maquinário'],
+  ['drafting-compass', 'Instalação inclusa', 'Equipe própria monta na sua academia'],
+  ['shield-check', 'Garantia de 5 anos', 'Na estrutura · suporte técnico próprio'],
+] as const;
+---
+<BaseLayout title={`${p.name} — Stark Strong`} description={p.tagline ?? p.spec}>
+  <TopBar />
+  <Header />
+  <CategoryNav />
+
+  <main class="pd">
+    <!-- Breadcrumb -->
+    <nav class="pd-crumbs" aria-label="Você está em">
+      <a href="/">Início</a>
+      <Icon name="chevron-right" size={14} />
+      <a href="/#produtos">{p.category}</a>
+      <Icon name="chevron-right" size={14} />
+      <span>{p.name}</span>
+    </nav>
+
+    <!-- Topo: galeria + informações -->
+    <section class="pd-hero">
+      <div class="pd-gallery">
+        <div class="pd-gallery__main">
+          <span class="pd-gallery__seam"></span>
+          {p.tag && <span class="pd-gallery__tag"><Badge variant="gold">{p.tag}</Badge></span>}
+          <img id="pd-main" src={gallery[0]} alt={p.name} />
+        </div>
+        {gallery.length > 1 && (
+          <div class="pd-gallery__thumbs" id="pd-thumbs">
+            {gallery.map((g, i) => (
+              <button class={`pd-thumb${i === 0 ? ' is-active' : ''}`} type="button" data-src={g} aria-label={`Imagem ${i + 1}`}>
+                <img src={g} alt="" loading="lazy" />
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div class="pd-info">
+        <p class="pd-info__cat"><span class="hm-topbar__sep"></span>{p.category}</p>
+        <h1 class="pd-info__title">{p.name}</h1>
+
+        <div class="pd-info__trust">
+          {p.tag && <span class="ss-badge ss-badge--gold">{p.tag}</span>}
+          <span class="pd-info__proof"><Icon name="building-2" size={15} color="var(--accent)" />{p.reviews}+ academias equipadas</span>
+        </div>
+
+        {p.tagline && <p class="pd-info__tagline">{p.tagline}</p>}
+
+        {chips.length > 0 && (
+          <ul class="pd-specchips">
+            {chips.map((c) => (
+              <li><Icon name="check" size={14} color="var(--accent)" />{c}</li>
+            ))}
+          </ul>
+        )}
+
+        <div class="pd-buy">
+          <div class="pd-buy__price">
+            <span class="pd-buy__label">Investimento</span>
+            <span class="pd-buy__quote">Sob orçamento</span>
+            <span class="pd-buy__note">Resposta com proposta e prazo em até 1 dia útil — sem compromisso.</span>
+          </div>
+          <div class="pd-buy__actions">
+            <Button
+              variant="primary"
+              size="lg"
+              icon="plus"
+              data-add-orcamento
+              data-id={p.id}
+              data-name={p.name}
+              data-cat={p.category}
+              data-img={p.img}
+            >Adicionar ao orçamento</Button>
+          </div>
+        </div>
+
+        <ul class="pd-guarantees">
+          {guarantees.map(([ic, t, s]) => (
+            <li>
+              <span class="pd-guarantees__ic"><Icon name={ic} size={18} color="var(--accent)" /></span>
+              <div><b>{t}</b><span>{s}</span></div>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+
+    <!-- Descrição + destaques -->
+    {(p.description || p.highlights) && (
+      <section class="pd-section">
+        <div class="pd-overview">
+          {p.description && (
+            <div class="pd-overview__copy">
+              <p class="u-overline">Sobre o equipamento</p>
+              <h2 class="hm-title">ENGENHARIA <span>QUE SE SENTE</span></h2>
+              {p.description.map((d) => <p class="pd-overview__p">{d}</p>)}
+            </div>
+          )}
+          {p.highlights && (
+            <div class="pd-highlights">
+              {p.highlights.map((h) => (
+                <div class="pd-highlight">
+                  <span class="pd-highlight__ic"><Icon name={h.icon} size={22} color="var(--accent)" /></span>
+                  <h3>{h.title}</h3>
+                  <p>{h.text}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+    )}
+
+    <!-- Ficha técnica -->
+    {p.specs && (
+      <section class="pd-section pd-section--dark">
+        <div class="pd-specs">
+          <div class="pd-specs__head">
+            <p class="u-overline">Ficha técnica</p>
+            <h2 class="hm-title">ESPECIFICAÇÕES</h2>
+          </div>
+          <dl class="pd-specs__table">
+            {p.specs.map((s) => (
+              <div class="pd-specs__row">
+                <dt>{s.label}</dt>
+                <dd>{s.value}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      </section>
+    )}
+
+    <!-- Relacionados -->
+    {related.length > 0 && (
+      <section class="pd-section">
+        <div class="hm-sectionhead">
+          <div>
+            <p class="u-overline">Mesma linha</p>
+            <h2 class="hm-title">TAMBÉM EM <span>{p.category.toUpperCase()}</span></h2>
+          </div>
+          <Button as="a" href="/#produtos" variant="ghost" icon="arrow-right" iconRight>Ver tudo</Button>
+        </div>
+        <div class="pd-related">
+          {related.map((r) => <ProductCard product={r} />)}
+        </div>
+      </section>
+    )}
+  </main>
+
+  <StoreFooter />
+</BaseLayout>
+
+<script>
+  const thumbs = document.getElementById('pd-thumbs');
+  const main = document.getElementById('pd-main') as HTMLImageElement | null;
+  if (thumbs && main) {
+    thumbs.addEventListener('click', (e) => {
+      const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-src]');
+      if (!btn) return;
+      main.src = btn.dataset.src!;
+      thumbs.querySelectorAll('.pd-thumb').forEach((t) => t.classList.remove('is-active'));
+      btn.classList.add('is-active');
+    });
+  }
+</script>

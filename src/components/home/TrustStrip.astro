@@ -1,0 +1,21 @@
+---
+import Icon from '../core/Icon.astro';
+
+const items = [
+  ['shield-check', 'Qualidade profissional', 'Garantia e suporte técnico próprio'],
+  ['truck', 'Entrega para todo o Brasil', 'Logística especializada em maquinário'],
+  ['drafting-compass', 'Projeto sob medida', 'Layout e mix ideais para sua academia'],
+  ['handshake', 'Parceria de verdade', 'Acompanhamento próximo, do projeto ao pós'],
+] as const;
+---
+<section class="hm-trust" data-reveal-stagger>
+  {items.map(([ic, t, s]) => (
+    <div class="hm-trust__item">
+      <span class="hm-trust__ic"><Icon name={ic} size={22} color="var(--accent)" /></span>
+      <div>
+        <p class="hm-trust__t">{t}</p>
+        <p class="hm-trust__s">{s}</p>
+      </div>
+    </div>
+  ))}
+</section>

@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm -v)",
+      "Bash(npm config *)",
+      "Bash(mkdir -p \"C:/Users/agenc/meusprojetos/starkstrong/public/assets\" && cp \"C:/Users/agenc/meusprojetos/starkstrong/_design-claude/assets/\"*.png \"C:/Users/agenc/meusprojetos/starkstrong/public/assets/\" && ls -la \"C:/Users/agenc/meusprojetos/starkstrong/public/assets/\")",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code} · %{size_download} bytes\\\\n\" http://localhost:4321/)",
+      "Bash(curl -s http://localhost:4321/)",
+      "PowerShell(npm run build)",
+      "PowerShell(npm run build 2>&1)",
+      "Bash(node .claude/skills/impeccable/scripts/context.mjs)",
+      "Bash(node \"C:\\\\Users\\\\agenc\\\\.claude\\\\skills\\\\impeccable\\\\scripts\\\\context.mjs\")",
+      "Bash(node \"C:\\\\Users\\\\agenc\\\\.claude\\\\skills\\\\impeccable\\\\scripts\\\\detect.mjs\" --json src/components src/pages src/layouts)",
+      "Bash(node \"C:\\\\Users\\\\agenc\\\\.claude\\\\skills\\\\impeccable\\\\scripts\\\\critique-storage.mjs\" slug \"src/pages/index.astro\")",
+      "Bash(IMPECCABLE_CRITIQUE_META='{\"target\":\"o site \\(home + PDP\\)\",\"total_score\":26,\"p0_count\":0,\"p1_count\":3}' node \"C:\\\\Users\\\\agenc\\\\.claude\\\\skills\\\\impeccable\\\\scripts\\\\critique-storage.mjs\" write src-pages-index-astro \"c:\\\\tmp\\\\impeccable-critique-body.md\")",
+      "Bash(node \"C:\\\\Users\\\\agenc\\\\.claude\\\\skills\\\\impeccable\\\\scripts\\\\critique-storage.mjs\" trend src-pages-index-astro 5)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\agenc\\meusprojetos\\starkstrong\\_design-claude\\assets"
+    ]
+  }
+}

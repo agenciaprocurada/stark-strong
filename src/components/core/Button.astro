@@ -1,0 +1,34 @@
+---
+/* Stark Strong — ação primária. Renderiza <button> ou <a> (as="a" + href). */
+import Icon from './Icon.astro';
+
+interface Props {
+  variant?: 'primary' | 'secondary' | 'ghost' | 'dark';
+  size?: 'sm' | 'md' | 'lg';
+  icon?: string;
+  iconRight?: boolean;
+  iconOnly?: boolean;
+  as?: 'button' | 'a';
+  class?: string;
+  [key: string]: unknown;
+}
+
+const {
+  variant = 'primary',
+  size = 'md',
+  icon,
+  iconRight = false,
+  iconOnly = false,
+  as = 'button',
+  class: cls = '',
+  ...rest
+} = Astro.props;
+
+const Tag = as;
+const iconSize = size === 'lg' ? 17 : size === 'sm' ? 14 : 15;
+---
+<Tag class:list={['ss-btn', `ss-btn--${variant}`, `ss-btn--${size}`, iconOnly && 'ss-btn--icon-only', cls]} {...rest}>
+  {icon && !iconRight && <span class="ss-btn__icon"><Icon name={icon} size={iconSize} /></span>}
+  {iconOnly ? <span class="ss-btn__sr"><slot /></span> : <span><slot /></span>}
+  {icon && iconRight && <span class="ss-btn__icon"><Icon name={icon} size={iconSize} /></span>}
+</Tag>

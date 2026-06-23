@@ -1,0 +1,29 @@
+---
+/* Stark Strong — select com caret dourado. Passe `options` (string[] ou {value,label}[]) ou use slot. */
+interface Option { value: string; label: string; }
+interface Props {
+  label?: string;
+  options?: (string | Option)[];
+  onDark?: boolean;
+  id?: string;
+  class?: string;
+  [key: string]: unknown;
+}
+const { label, options = [], onDark = false, id, class: cls = '', ...rest } = Astro.props;
+const fid = id || `ss-sel-${Math.random().toString(36).slice(2, 8)}`;
+const norm = (o: string | Option) => (typeof o === 'string' ? { value: o, label: o } : o);
+---
+<div class:list={['ss-select', onDark && 'ss-select--dark', cls]}>
+  {label && <label class="ss-select__label" for={fid}>{label}</label>}
+  <div class="ss-select__wrap">
+    <select id={fid} class="ss-select__el" {...rest}>
+      <slot>
+        {options.map((o) => {
+          const { value, label: lbl } = norm(o);
+          return <option value={value}>{lbl}</option>;
+        })}
+      </slot>
+    </select>
+    <span class="ss-select__caret"></span>
+  </div>
+</div>
