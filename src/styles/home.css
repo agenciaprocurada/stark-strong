@@ -288,3 +288,22 @@
     background:var(--bg-dark);border-bottom:1px solid var(--border-on-dark);
     padding:18px 24px 24px;max-height:calc(100vh - 70px);overflow-y:auto;box-shadow:var(--shadow-on-dark)}
 }
+@media(max-width:640px){
+  .hm-products{grid-template-columns:1fr}
+  /* título ocupa 100% da largura; botão do cabeçalho desce abaixo */
+  .hm-sectionhead{flex-direction:column;align-items:stretch;gap:14px;margin-bottom:26px}
+  .hm-sectionhead .ss-btn{align-self:flex-start}
+  /* "Ver catálogo completo" do topo some no mobile — fica só o do final */
+  #destaques .hm-sectionhead > .ss-btn{display:none}
+  /* títulos das seções: menores e sem corte no celular */
+  .hm-title{font-size:clamp(24px,6.5vw,30px)}
+  /* trust strip: 1 coluna (2 colunas cortavam o texto a 390px) */
+  .hm-trust{grid-template-columns:1fr}
+  .hm-trust__item{border-right:none;border-bottom:1px solid var(--border-on-dark);padding:16px 22px}
+  .hm-trust__item:last-child{border-bottom:none}
+  .hm-trust__item > div{min-width:0}
+  /* footer: empilha em 1 coluna */
+  .hm-footer__top{grid-template-columns:1fr;gap:28px}
+  /* menos padding lateral nas seções em telas estreitas */
+  .hm-section{padding:48px 22px}
+}

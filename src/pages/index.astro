@@ -79,10 +79,10 @@ const motivos = [
 ];
 
 const projetos = [
-  { img: '/assets/photo-gym-dark.png', nome: 'Academia Iron Performance', cidade: 'São Paulo · SP', cat: 'Academia Comercial' },
-  { img: '/assets/photo-machine-rack.png', nome: 'Studio Movimento', cidade: 'Campinas · SP', cat: 'Studio Personal' },
-  { img: '/assets/photo-machine-hero.png', nome: 'Residencial Park Tower', cidade: 'Rio de Janeiro · RJ', cat: 'Academia de Condomínio' },
-  { img: '/assets/photo-detail-plate.png', nome: 'Box Cross Norte', cidade: 'Belo Horizonte · MG', cat: 'Cross Training' },
+  { nome: 'Academia Iron Performance', cidade: 'São Paulo · SP', cat: 'Academia Comercial' },
+  { nome: 'Studio Movimento', cidade: 'Campinas · SP', cat: 'Studio Personal' },
+  { nome: 'Residencial Park Tower', cidade: 'Rio de Janeiro · RJ', cat: 'Academia de Condomínio' },
+  { nome: 'Box Cross Norte', cidade: 'Belo Horizonte · MG', cat: 'Cross Training' },
 ];
 
 const etapas = [
@@ -388,7 +388,7 @@ const schemas = [organizationLd, localBusinessLd, productsLd, faqLd, breadcrumbL
     <div class="geo-cards geo-cards--4" data-reveal-stagger>
       {projetos.map((p) => (
         <article class="geo-proj__item">
-          <div class="geo-proj__imgwrap"><img src={p.img} alt={`Projeto ${p.nome} — ${p.cat}`} loading="lazy" /></div>
+          <div class="geo-proj__map" aria-hidden="true"><span class="geo-proj__pin"><Icon name="map-pin" size={26} color="var(--accent)" /></span></div>
           <div class="geo-proj__body">
             <span class="geo-proj__cat">{p.cat}</span>
             <h3 class="geo-proj__name">{p.nome}</h3>
@@ -588,9 +588,15 @@ const schemas = [organizationLd, localBusinessLd, productsLd, faqLd, breadcrumbL
   .geo-proj__item { border: 1px solid var(--border-subtle); border-radius: var(--radius-md);
     overflow: hidden; background: var(--surface-card); transition: box-shadow var(--dur-base), transform var(--dur-base); }
   .geo-proj__item:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
-  .geo-proj__imgwrap { height: 190px; overflow: hidden; background: #000; }
-  .geo-proj__imgwrap img { width: 100%; height: 100%; object-fit: cover; transition: transform var(--dur-slow) var(--ease-out); }
-  .geo-proj__item:hover .geo-proj__imgwrap img { transform: scale(1.05); }
+  .geo-proj .hm-title { font-size: clamp(24px, 3vw, 34px); }
+  .geo-proj__map { position: relative; height: 150px; display: flex; align-items: center; justify-content: center;
+    background-color: var(--bg-dark); border-bottom: 1px solid var(--border-subtle); overflow: hidden;
+    background-image: linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
+    background-size: 24px 24px; }
+  .geo-proj__pin { width: 58px; height: 58px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    background: rgba(185,145,75,.12); border: 1px solid var(--accent); transition: transform var(--dur-base); }
+  .geo-proj__item:hover .geo-proj__pin { transform: scale(1.08); }
   .geo-proj__body { padding: 18px 20px 20px; }
   .geo-proj__cat { font-family: var(--font-subhead); font-weight: 600; font-size: 11px; letter-spacing: .12em;
     text-transform: uppercase; color: var(--accent); }
@@ -610,6 +616,7 @@ const schemas = [organizationLd, localBusinessLd, productsLd, faqLd, breadcrumbL
   .geo-step__desc { font-size: 12.5px; line-height: 1.5; color: var(--text-on-dark-muted); margin: 0; }
 
   /* ---------- S7 essenciais ---------- */
+  .geo-ess .hm-title { font-size: clamp(22px, 2.8vw, 30px); }
   .geo-esslist { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
   .geo-esslink { display: flex; align-items: center; gap: 14px; border: 1px solid var(--border-subtle);
     border-radius: var(--radius-md); background: var(--surface-card); padding: 16px 18px; text-decoration: none;
@@ -662,5 +669,8 @@ const schemas = [organizationLd, localBusinessLd, productsLd, faqLd, breadcrumbL
     .geo-bento__close { flex-direction: column; align-items: flex-start; }
     .geo-cards--4 { grid-template-columns: 1fr; }
     .geo-timeline { grid-template-columns: 1fr; }
+    .geo-bento__close { padding: 22px 22px; }
+    /* títulos uniformes no mobile (sobrepõe os tamanhos de uma-linha do desktop) */
+    .geo-proj .hm-title, .geo-ess .hm-title { font-size: clamp(24px, 6.5vw, 30px); }
   }
 </style>
