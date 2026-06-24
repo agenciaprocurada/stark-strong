@@ -1,0 +1,26 @@
+---
+import Button from '../core/Button.astro';
+import ProductCard from './ProductCard.astro';
+import { getFeatured } from '../../lib/catalog';
+
+const featured = await getFeatured(8);
+---
+<section class="hm-section" id="destaques">
+  <div class="hm-sectionhead" data-reveal>
+    <div>
+      <p class="u-overline">Seleção Stark Strong</p>
+      <h2 class="hm-title">PRODUTOS EM <span>DESTAQUE</span></h2>
+    </div>
+    <Button as="a" href="/produtos" variant="ghost" icon="arrow-right" iconRight>Ver catálogo completo</Button>
+  </div>
+
+  <p class="hm-products__intro" data-reveal>Uma seleção dos equipamentos que mais transformam academias. Veja o catálogo completo para montar seu orçamento.</p>
+
+  <div class="hm-products" data-reveal-stagger>
+    {featured.map((p) => <ProductCard product={p} />)}
+  </div>
+
+  <div class="hm-catalog-cta" data-reveal>
+    <Button as="a" href="/produtos" variant="primary" size="lg" icon="arrow-right" iconRight>Ver catálogo completo</Button>
+  </div>
+</section>

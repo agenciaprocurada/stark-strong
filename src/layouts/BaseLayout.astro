@@ -47,6 +47,20 @@ const {
         else document.addEventListener('DOMContentLoaded', init);
       })();
     </script>
+    <script is:inline>
+      /* Mede a altura real do header e ajusta o offset do menu de categorias
+         (sticky). Evita sobreposição/folga ao rolar, em qualquer largura. */
+      (function () {
+        function setHeaderH() {
+          var h = document.querySelector('.hm-header');
+          if (h) document.documentElement.style.setProperty('--header-h', Math.round(h.getBoundingClientRect().height) + 'px');
+        }
+        if (document.readyState !== 'loading') setHeaderH();
+        else document.addEventListener('DOMContentLoaded', setHeaderH);
+        window.addEventListener('load', setHeaderH);
+        window.addEventListener('resize', setHeaderH);
+      })();
+    </script>
   </head>
   <body>
     <slot />

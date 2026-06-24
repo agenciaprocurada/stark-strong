@@ -39,7 +39,7 @@ const guarantees = [
     <nav class="pd-crumbs" aria-label="Você está em">
       <a href="/">Início</a>
       <Icon name="chevron-right" size={14} />
-      <a href="/#produtos">{p.category}</a>
+      <a href={`/produtos#${p.categorySlug}`}>{p.category}</a>
       <Icon name="chevron-right" size={14} />
       <span>{p.name}</span>
     </nav>
@@ -151,7 +151,7 @@ const guarantees = [
             <p class="u-overline">Mesma linha</p>
             <h2 class="hm-title">TAMBÉM EM <span>{p.category.toUpperCase()}</span></h2>
           </div>
-          <Button as="a" href="/#produtos" variant="ghost" icon="arrow-right" iconRight>Ver tudo</Button>
+          <Button as="a" href={`/produtos#${p.categorySlug}`} variant="ghost" icon="arrow-right" iconRight>Ver tudo</Button>
         </div>
         <div class="pd-related">
           {related.map((r) => <ProductCard product={r} />)}

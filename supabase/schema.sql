@@ -25,8 +25,12 @@ create table if not exists public.produtos (
   imagem_principal text,                 -- caminho web, ex.: /produtos/arquivo.png
   url_origem       text,
   ativo            boolean not null default true,
+  destaque         boolean not null default false,  -- aparece em "Produtos em destaque" na home
   created_at       timestamptz not null default now()
 );
+
+-- garante a coluna em bancos já existentes (idempotente)
+alter table public.produtos add column if not exists destaque boolean not null default false;
 
 create table if not exists public.produto_imagens (
   id         bigint generated always as identity primary key,
@@ -38,6 +42,7 @@ create table if not exists public.produto_imagens (
 
 create index if not exists idx_produtos_categoria on public.produtos(categoria_id);
 create index if not exists idx_produtos_ativo      on public.produtos(ativo);
+create index if not exists idx_produtos_destaque   on public.produtos(destaque);
 create index if not exists idx_imagens_produto     on public.produto_imagens(produto_id);
 
 -- =========================================================

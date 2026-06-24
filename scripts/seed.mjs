@@ -62,6 +62,9 @@ for (const k in groups) groups[k].sort((a, b) => fotoNum(a) - fotoNum(b)); // se
 // ---- helpers ----
 const slugify = (s) => s.toString().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
   .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+
+// Destaques iniciais (até o cadastro de produtos assumir esse controle).
+const FEATURED = new Set(['9020', '9001', '9038', '9002', '9015', '9112', '9234', '9082']);
 const CAT_ORDER = ['Equipamentos para musculação', 'Cardio', 'Bancos', 'Suportes', 'Pesos', 'Barras', 'Acessórios'];
 
 // montar categorias únicas preservando ordem desejada
@@ -135,9 +138,9 @@ async function main() {
   for (const p of produtos) {
     const { rows: [prod] } = await client.query(
       `insert into public.produtos
-        (ref, slug, nome, categoria_id, preco, especificacoes, descricao, imagem_principal, url_origem)
-       values ($1,$2,$3,$4,$5,$6,$7,$8,$9) returning id`,
-      [p.ref, p.slug, p.nome, catId[p.categoria], p.preco, p.espec, p.desc, p.imagem_principal, p.url_origem],
+        (ref, slug, nome, categoria_id, preco, especificacoes, descricao, imagem_principal, url_origem, destaque)
+       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) returning id`,
+      [p.ref, p.slug, p.nome, catId[p.categoria], p.preco, p.espec, p.desc, p.imagem_principal, p.url_origem, FEATURED.has(p.ref)],
     );
     for (let i = 0; i < p.imagens.length; i++) {
       await client.query(
@@ -155,7 +158,8 @@ async function main() {
       (select count(*) from public.categorias) as categorias,
       (select count(*) from public.produtos) as produtos,
       (select count(*) from public.produto_imagens) as imagens,
-      (select count(*) from public.produtos where imagem_principal is null) as sem_imagem
+      (select count(*) from public.produtos where imagem_principal is null) as sem_imagem,
+      (select count(*) from public.produtos where destaque) as destaques
   `);
   console.log('VERIFICAÇÃO:', v);
 

@@ -5,6 +5,6 @@ import { getCategories } from '../../lib/catalog';
 const categories = await getCategories();
 ---
 <nav class="hm-cats">
-  {categories.map((c) => <a class="hm-cats__link" href="#produtos">{c.nome}</a>)}
+  {categories.map((c) => <a class="hm-cats__link" href={`/produtos#${c.slug}`}>{c.nome}</a>)}
   <span class="hm-cats__phone"><Icon name="headset" size={16} color="var(--accent)" /> Atendimento <b>(11) 4000-2025</b></span>
 </nav>

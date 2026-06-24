@@ -1,0 +1,16 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import TopBar from '../components/home/TopBar.astro';
+import Header from '../components/home/Header.astro';
+import CategoryNav from '../components/home/CategoryNav.astro';
+import ProductGrid from '../components/home/ProductGrid.astro';
+import StoreFooter from '../components/home/StoreFooter.astro';
+import '../styles/home.css';
+---
+<BaseLayout title="Catálogo — Stark Strong" description="Catálogo completo de equipamentos profissionais de musculação Stark Strong. Filtre por categoria e monte seu orçamento.">
+  <TopBar />
+  <Header />
+  <CategoryNav />
+  <ProductGrid />
+  <StoreFooter />
+</BaseLayout>

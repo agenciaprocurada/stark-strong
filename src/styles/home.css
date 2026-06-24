@@ -58,8 +58,14 @@
 .hm-mobnav__phone{display:flex;align-items:center;gap:9px;margin-top:16px;font-family:var(--font-subhead);
   font-weight:600;font-size:14px;color:var(--text-on-dark);text-decoration:none}
 
+/* âncoras não ficam escondidas sob header+cats fixos ao rolar */
+.hm-section{scroll-margin-top:calc(var(--header-h,71px) + 52px)}
+
+/* CTA central abaixo dos destaques */
+.hm-catalog-cta{display:flex;justify-content:center;margin-top:38px}
+
 /* ---------- Category nav ---------- */
-.hm-cats{position:sticky;top:71px;z-index:39;display:flex;align-items:center;gap:4px;
+.hm-cats{position:sticky;top:var(--header-h,71px);z-index:39;display:flex;align-items:center;gap:4px;
   background:var(--bg-dark-alt);border-bottom:1px solid var(--border-on-dark);padding:0 max(24px, calc((100% - 1160px) / 2))}
 .hm-cats__link{font-family:var(--font-subhead);font-weight:600;font-size:13px;letter-spacing:.05em;
   text-transform:uppercase;color:var(--text-on-dark-muted);cursor:pointer;padding:14px 16px;

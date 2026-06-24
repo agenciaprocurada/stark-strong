@@ -22,6 +22,7 @@ export interface ViewProduct {
   chips: string[]; // selos técnicos da página de detalhe
   description: string[]; // parágrafos
   specs: { label: string; value: string }[]; // ficha técnica
+  destaque: boolean;
 }
 
 /* ---------- normalização de texto ---------- */
@@ -87,6 +88,7 @@ type Row = {
   especificacoes: string | null;
   descricao: string | null;
   imagem_principal: string | null;
+  destaque: boolean;
   categorias: { nome: string; slug: string } | null;
   produto_imagens: { arquivo: string; ordem: number }[];
 };
@@ -126,16 +128,21 @@ function mapProduct(r: Row): ViewProduct {
     chips,
     description: paragraphs(r.descricao),
     specs,
+    destaque: !!r.destaque,
   };
 }
 
-/* ---------- cache de build ---------- */
+/* ---------- cache ----------
+   No build (uma única execução) cacheamos para não repetir a query a cada
+   página/componente. Em dev re-consultamos sempre, para que qualquer re-seed
+   apareça na hora — sem precisar reiniciar o servidor. */
 const SELECT = '*, categorias(nome,slug), produto_imagens(arquivo,ordem)';
+const CACHE = !import.meta.env.DEV;
 let _cats: Promise<ViewCategory[]> | null = null;
 let _prods: Promise<ViewProduct[]> | null = null;
 
 export function getCategories(): Promise<ViewCategory[]> {
-  if (!_cats) {
+  if (!_cats || !CACHE) {
     _cats = supabase
       .from('categorias')
       .select('slug,nome,ordem')
@@ -149,7 +156,7 @@ export function getCategories(): Promise<ViewCategory[]> {
 }
 
 export function getProducts(): Promise<ViewProduct[]> {
-  if (!_prods) {
+  if (!_prods || !CACHE) {
     _prods = supabase
       .from('produtos')
       .select(SELECT)
@@ -165,6 +172,13 @@ export function getProducts(): Promise<ViewProduct[]> {
 
 export async function getProduct(slug: string): Promise<ViewProduct | undefined> {
   return (await getProducts()).find((p) => p.slug === slug);
+}
+
+/** Produtos em destaque para a home (máx. n). Sem destaques marcados, cai nos primeiros n. */
+export async function getFeatured(n = 8): Promise<ViewProduct[]> {
+  const all = await getProducts();
+  const flagged = all.filter((p) => p.destaque).slice(0, n);
+  return flagged.length ? flagged : all.slice(0, n);
 }
 
 export async function getRelated(p: ViewProduct, n = 3): Promise<ViewProduct[]> {
