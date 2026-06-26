@@ -8,6 +8,7 @@ import ProductCard from '../../components/home/ProductCard.astro';
 import Icon from '../../components/core/Icon.astro';
 import Button from '../../components/core/Button.astro';
 import { getProducts, getRelated, type ViewProduct } from '../../lib/catalog';
+import { preferWebp } from '../../lib/img';
 import '../../styles/home.css';
 import '../../styles/produto.css';
 
@@ -49,13 +50,13 @@ const guarantees = [
       <div class="pd-gallery">
         <div class="pd-gallery__main">
           <span class="pd-gallery__seam"></span>
-          <img id="pd-main" src={gallery[0]} alt={p.name} />
+          <img id="pd-main" src={preferWebp(gallery[0])} alt={p.name} />
         </div>
         {gallery.length > 1 && (
           <div class="pd-gallery__thumbs" id="pd-thumbs">
             {gallery.map((g, i) => (
-              <button class={`pd-thumb${i === 0 ? ' is-active' : ''}`} type="button" data-src={g} aria-label={`Imagem ${i + 1}`}>
-                <img src={g} alt="" loading="lazy" />
+              <button class={`pd-thumb${i === 0 ? ' is-active' : ''}`} type="button" data-src={preferWebp(g)} aria-label={`Imagem ${i + 1}`}>
+                <img src={preferWebp(g)} alt="" loading="lazy" />
               </button>
             ))}
           </div>
@@ -94,7 +95,7 @@ const guarantees = [
               data-id={p.id}
               data-name={p.name}
               data-cat={p.category}
-              data-img={p.img}
+              data-img={preferWebp(p.img)}
             >Adicionar ao orçamento</Button>
           </div>
         </div>

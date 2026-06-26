@@ -1,5 +1,6 @@
 ---
 import Icon from '../core/Icon.astro';
+import Pic from '../core/Pic.astro';
 import { getCategories } from '../../lib/catalog';
 
 const categories = await getCategories();
@@ -8,7 +9,7 @@ const categories = await getCategories();
   <button class="hm-burger" type="button" data-burger aria-label="Abrir menu" aria-expanded="false" aria-controls="hm-mobnav">
     <Icon name="menu" size={22} />
   </button>
-  <a class="hm-logo" href="/"><img src="/assets/logo-negative.png" alt="Stark Strong" /></a>
+  <a class="hm-logo" href="/"><Pic src="/assets/logo-negative.png" alt="Stark Strong" /></a>
   <form class="hm-search" onsubmit="return false">
     <Icon name="search" size={18} color="var(--text-on-dark-muted)" />
     <input placeholder="Buscar equipamentos, linhas, acessórios..." aria-label="Buscar" />

@@ -1,33 +1,40 @@
 ---
 import Icon from '../core/Icon.astro';
 import Button from '../core/Button.astro';
+import Pic from '../core/Pic.astro';
+import { getBanners } from '../../lib/catalog';
 
-const SLIDES = [
+// Os banners vêm do Supabase (geridos em /admin). Se o banco estiver vazio ou
+// indisponível no build, estes três entram como fallback p/ a home não quebrar.
+const FALLBACK = [
   {
     eyebrow: 'Linha profissional 2025',
     title: [{ t: 'A LINHA QUE' }, { t: 'TRANSFORMA', gold: true }, { t: 'ACADEMIAS' }],
     lead: 'Biomecânica precisa, aço estrutural e acabamento premium. Os equipamentos que viram referência de performance.',
-    img: 'photo-machine-hero.png',
-    primary: 'Solicitar orçamento',
-    secondary: 'Linha completa',
+    img: '/assets/photo-machine-hero.png',
+    primary: 'Solicitar orçamento', primaryHref: '/produtos',
+    secondary: 'Linha completa', secondaryHref: '/produtos',
   },
   {
     eyebrow: 'Tecnologia Stark Strong',
     title: [{ t: 'BIOMECÂNICA', gold: true }, { t: 'QUE SE SENTE' }, { t: 'NA PRIMEIRA SÉRIE' }],
     lead: 'Guias lineares, ângulos de 45° e curvas de resistência projetadas para resultado real — do iniciante ao avançado.',
-    img: 'photo-machine-rack.png',
-    primary: 'Conheça a tecnologia',
-    secondary: 'Falar com especialista',
+    img: '/assets/photo-machine-rack.png',
+    primary: 'Conheça a tecnologia', primaryHref: '/produtos',
+    secondary: 'Falar com especialista', secondaryHref: '/produtos',
   },
   {
     eyebrow: 'Solução end-to-end',
     title: [{ t: 'DO PROJETO' }, { t: 'À INSTALAÇÃO', gold: true }, { t: 'DA SUA ACADEMIA' }],
     lead: 'Monte sua academia com a Stark Strong: projeto, fabricação, logística e instalação, com suporte próximo.',
-    img: 'photo-gym-dark.png',
-    primary: 'Montar orçamento',
-    secondary: 'Como funciona',
+    img: '/assets/photo-gym-dark.png',
+    primary: 'Montar orçamento', primaryHref: '/produtos',
+    secondary: 'Como funciona', secondaryHref: '/produtos',
   },
 ];
+
+const fromDb = await getBanners();
+const SLIDES = fromDb.length ? fromDb : FALLBACK;
 ---
 <section class="hm-hero" id="hero">
   {SLIDES.map((s, i) => (
@@ -44,13 +51,13 @@ const SLIDES = [
         </h1>
         <p class="hm-slide__lead">{s.lead}</p>
         <div class="hm-slide__actions">
-          <Button as="a" href="/produtos" variant="primary" size="lg" icon="arrow-right" iconRight>{s.primary}</Button>
-          <Button as="a" href="/produtos" variant="dark" size="lg">{s.secondary}</Button>
+          {s.primary && <Button as="a" href={s.primaryHref} variant="primary" size="lg" icon="arrow-right" iconRight>{s.primary}</Button>}
+          {s.secondary && <Button as="a" href={s.secondaryHref} variant="dark" size="lg">{s.secondary}</Button>}
         </div>
       </div>
       <div class="hm-slide__photo">
         <span class="hm-slide__seam"></span>
-        <img src={`/assets/${s.img}`} alt="" />
+        <Pic src={s.img} alt="" />
       </div>
     </div>
   ))}

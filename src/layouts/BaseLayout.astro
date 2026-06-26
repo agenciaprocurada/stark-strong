@@ -19,6 +19,9 @@ const {
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" type="image/png" href="/assets/logo-positive.png" />
+    {/* Fontes locais — preload das críticas (título display + corpo) para o LCP */}
+    <link rel="preload" href="/fonts/league-spartan-900-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/inter-400-normal.woff2" as="font" type="font/woff2" crossorigin />
     <title>{title}</title>
     <meta name="description" content={description} />
     <script is:inline>

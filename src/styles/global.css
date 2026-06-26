@@ -21,6 +21,8 @@ body {
   text-rendering: optimizeLegibility;
 }
 img { display: block; max-width: 100%; }
+/* <picture> não deve criar caixa própria: o <img> herda o layout do container. */
+picture { display: contents; }
 a { color: inherit; }
 button { font-family: inherit; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }

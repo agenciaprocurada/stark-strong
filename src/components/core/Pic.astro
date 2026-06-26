@@ -1,0 +1,20 @@
+---
+/* Imagem com fallback webp.
+   Renderiza <picture> com <source> webp + <img> original.
+   picture{display:contents} (global.css) mantém o layout idêntico a um <img> solto. */
+import { webpSrc } from '../../lib/img';
+
+interface Props {
+  src: string;
+  alt?: string;
+  class?: string;
+  loading?: 'lazy' | 'eager';
+  [key: string]: unknown;
+}
+const { src, alt = '', class: cls, loading, ...rest } = Astro.props;
+const webp = webpSrc(src);
+---
+<picture>
+  {webp && <source srcset={webp} type="image/webp" />}
+  <img src={src} alt={alt} class={cls} loading={loading} {...rest} />
+</picture>

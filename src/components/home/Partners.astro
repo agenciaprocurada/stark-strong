@@ -1,4 +1,5 @@
 ---
+import Pic from '../core/Pic.astro';
 const logos = Array.from({ length: 31 }, (_, i) => {
   const n = String(i + 1).padStart(2, '0');
   return `/assets/partners/parceiro_${n}.png`;
@@ -17,7 +18,7 @@ const track = [...logos, ...logos];
     <div class="hm-logos__track">
       {track.map((src) => (
         <div class="hm-logos__item">
-          <img src={src} alt="Logo de parceiro" loading="lazy" />
+          <Pic src={src} alt="Logo de parceiro" loading="lazy" />
         </div>
       ))}
     </div>

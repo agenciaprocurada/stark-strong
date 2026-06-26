@@ -14,6 +14,7 @@ import Partners from '../components/home/Partners.astro';
 import StoreFooter from '../components/home/StoreFooter.astro';
 import Icon from '../components/core/Icon.astro';
 import Button from '../components/core/Button.astro';
+import Pic from '../components/core/Pic.astro';
 import { getProducts, getFeatured } from '../lib/catalog';
 import '../styles/home.css';
 
@@ -265,7 +266,7 @@ const schemas = [organizationLd, localBusinessLd, productsLd, faqLd, breadcrumbL
 
       {/* Imagem âncora vertical */}
       <figure class="geo-bento__media">
-        <img src="/assets/photo-gym-dark.png" alt="Academia comercial equipada com equipamentos de musculação profissionais Stark Strong" loading="lazy" />
+        <Pic src="/assets/photo-gym-dark.png" alt="Academia comercial equipada com equipamentos de musculação profissionais Stark Strong" loading="lazy" />
       </figure>
 
       {/* Pilar 01 — Fabricação própria */}
@@ -352,7 +353,7 @@ const schemas = [organizationLd, localBusinessLd, productsLd, faqLd, breadcrumbL
         </div>
       </div>
       <div class="geo-musc__photo" data-reveal="right">
-        <img src="/assets/photo-machine-rack.png" alt="Equipamentos de musculação profissionais Stark Strong" loading="lazy" />
+        <Pic src="/assets/photo-machine-rack.png" alt="Equipamentos de musculação profissionais Stark Strong" loading="lazy" />
       </div>
     </div>
   </section>
