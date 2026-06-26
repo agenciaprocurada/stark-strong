@@ -1,0 +1,155 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+---
+
+<AdminLayout title="Categorias" active="categorias">
+  <div class="adm-page">
+    <header class="adm-ph">
+      <div>
+        <p class="adm-ph__over">Catálogo</p>
+        <h1 class="adm-ph__title">Categorias</h1>
+        <p class="adm-ph__desc">Organize os produtos em categorias.</p>
+      </div>
+    </header>
+
+    <div class="adm-msg adm-msg--err" data-err hidden></div>
+    <div class="adm-msg adm-msg--ok" data-ok hidden></div>
+
+    <!-- Adicionar -->
+    <form class="adm-card adm-card--sm adm-card-pad" data-novo style="margin-bottom:20px">
+      <h3 class="adm-card-h">Nova categoria</h3>
+      <div style="display:grid;grid-template-columns:2fr 1.4fr .6fr auto;gap:12px;align-items:end">
+        <div class="adm-field">
+          <label class="adm-label" for="nome">Nome *</label>
+          <input class="adm-input" id="nome" name="nome" required placeholder="Ex.: Esteiras" />
+        </div>
+        <div class="adm-field">
+          <label class="adm-label" for="slug">Slug</label>
+          <input class="adm-input" id="slug" name="slug" placeholder="auto" />
+        </div>
+        <div class="adm-field">
+          <label class="adm-label" for="ordem">Ordem</label>
+          <input class="adm-input" id="ordem" name="ordem" type="number" value="0" />
+        </div>
+        <button class="adm-btn adm-btn--primary adm-btn--md" type="submit" data-add>Adicionar</button>
+      </div>
+    </form>
+
+    <div data-list>
+      <div class="adm-loading">Carregando categorias…</div>
+    </div>
+  </div>
+
+  <script>
+    import { requireAuth } from '../../lib/adminAuth';
+    import { listCategorias, createCategoria, updateCategoria, deleteCategoria, slugify, type Categoria } from '../../lib/adminApi';
+
+    const listEl = document.querySelector('[data-list]') as HTMLElement;
+    const errEl = document.querySelector('[data-err]') as HTMLElement;
+    const okEl = document.querySelector('[data-ok]') as HTMLElement;
+    const formNovo = document.querySelector('[data-novo]') as HTMLFormElement;
+    let cats: Categoria[] = [];
+
+    function showErr(m: string) { errEl.textContent = m; errEl.hidden = false; okEl.hidden = true; }
+    function showOk(m: string) { okEl.textContent = m; okEl.hidden = false; errEl.hidden = true; }
+    function esc(s: string) { return (s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]!)); }
+
+    const COLS = 'grid-template-columns:2fr 1.6fr .6fr 160px';
+    function render() {
+      if (!cats.length) {
+        listEl.innerHTML = `<div class="adm-table"><div class="adm-empty"><div class="adm-empty__t">Nenhuma categoria</div>Adicione a primeira acima.</div></div>`;
+        return;
+      }
+      const head = `<div class="adm-table__head" style="${COLS}"><span>Nome</span><span>Slug</span><span>Ordem</span><span></span></div>`;
+      const rows = cats.map((c) => `
+        <div class="adm-table__row" style="${COLS}" data-row="${c.id}">
+          <span class="adm-table__main">${esc(c.nome)}</span>
+          <span class="adm-table__cell adm-table__cell--mono">/${esc(c.slug)}</span>
+          <span class="adm-table__cell">${c.ordem}</span>
+          <span style="display:flex;gap:6px;justify-content:flex-end">
+            <button class="adm-btn adm-btn--ghost adm-btn--sm" data-edit="${c.id}">Editar</button>
+            <button class="adm-btn adm-btn--icon" data-del="${c.id}" data-nome="${esc(c.nome)}">✕</button>
+          </span>
+        </div>`).join('');
+      listEl.innerHTML = `<div class="adm-table">${head}${rows}</div>`;
+    }
+
+    function editRow(c: Categoria) {
+      const row = listEl.querySelector(`[data-row="${c.id}"]`) as HTMLElement;
+      row.innerHTML = `
+        <input class="adm-input" data-e-nome value="${esc(c.nome)}" />
+        <input class="adm-input" data-e-slug value="${esc(c.slug)}" />
+        <input class="adm-input" data-e-ordem type="number" value="${c.ordem}" style="width:76px" />
+        <span style="display:flex;gap:6px;justify-content:flex-end">
+          <button class="adm-btn adm-btn--primary adm-btn--sm" data-save="${c.id}">Salvar</button>
+          <button class="adm-btn adm-btn--ghost adm-btn--sm" data-cancel>Cancelar</button>
+        </span>`;
+    }
+
+    listEl.addEventListener('click', async (e) => {
+      const t = e.target as HTMLElement;
+      const editBtn = t.closest('[data-edit]') as HTMLElement | null;
+      const saveBtn = t.closest('[data-save]') as HTMLElement | null;
+      const cancelBtn = t.closest('[data-cancel]') as HTMLElement | null;
+      const delBtn = t.closest('[data-del]') as HTMLElement | null;
+
+      if (editBtn) {
+        const c = cats.find((x) => x.id === Number(editBtn.dataset.edit));
+        if (c) editRow(c);
+      } else if (cancelBtn) {
+        render();
+      } else if (saveBtn) {
+        const id = Number(saveBtn.dataset.save);
+        const row = listEl.querySelector(`[data-row="${id}"]`) as HTMLElement;
+        const nome = (row.querySelector('[data-e-nome]') as HTMLInputElement).value.trim();
+        const slug = (row.querySelector('[data-e-slug]') as HTMLInputElement).value.trim() || slugify(nome);
+        const ordem = Number((row.querySelector('[data-e-ordem]') as HTMLInputElement).value) || 0;
+        if (!nome) return showErr('Informe o nome.');
+        try {
+          const upd = await updateCategoria(id, { nome, slug, ordem });
+          cats = cats.map((x) => (x.id === id ? upd : x)).sort((a, b) => a.ordem - b.ordem || a.nome.localeCompare(b.nome));
+          render(); showOk('Categoria atualizada.');
+        } catch (ex) { showErr(ex instanceof Error ? ex.message : 'Falha ao salvar.'); }
+      } else if (delBtn) {
+        const id = Number(delBtn.dataset.del);
+        if (!confirm(`Excluir a categoria "${delBtn.dataset.nome}"?`)) return;
+        try {
+          await deleteCategoria(id);
+          cats = cats.filter((x) => x.id !== id);
+          render(); showOk('Categoria excluída.');
+        } catch (ex) {
+          const msg = ex instanceof Error ? ex.message : 'Falha ao excluir.';
+          showErr(/violates foreign key|restrict/i.test(msg) ? 'Não dá para excluir: há produtos nesta categoria.' : msg);
+        }
+      }
+    });
+
+    formNovo.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(formNovo);
+      const nome = String(fd.get('nome')).trim();
+      if (!nome) return showErr('Informe o nome.');
+      try {
+        const nova = await createCategoria({ nome, slug: String(fd.get('slug')).trim() || undefined, ordem: Number(fd.get('ordem')) || 0 });
+        cats = [...cats, nova].sort((a, b) => a.ordem - b.ordem || a.nome.localeCompare(b.nome));
+        render(); formNovo.reset();
+        (formNovo.elements.namedItem('ordem') as HTMLInputElement).value = '0';
+        showOk('Categoria adicionada.');
+      } catch (ex) {
+        const msg = ex instanceof Error ? ex.message : 'Falha ao adicionar.';
+        showErr(/duplicate|unique/i.test(msg) ? 'Já existe uma categoria com esse slug.' : msg);
+      }
+    });
+
+    (async () => {
+      await requireAuth();
+      try {
+        cats = await listCategorias();
+        render();
+      } catch (ex) {
+        listEl.innerHTML = '';
+        showErr(ex instanceof Error ? ex.message : 'Falha ao carregar categorias.');
+      }
+    })();
+  </script>
+</AdminLayout>

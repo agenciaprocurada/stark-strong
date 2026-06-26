@@ -44,3 +44,21 @@ export type Produto = {
   ativo: boolean;
   created_at: string;
 };
+
+// Linha do título do banner: texto + destaque opcional em dourado.
+export type BannerLinhaTitulo = { t: string; gold?: boolean };
+
+export type Banner = {
+  id: number;
+  ordem: number;
+  ativo: boolean;
+  eyebrow: string | null;
+  titulo: BannerLinhaTitulo[];
+  lead: string | null;
+  imagem: string | null;
+  botao1_texto: string | null;
+  botao1_link: string;
+  botao2_texto: string | null;
+  botao2_link: string;
+  created_at: string;
+};

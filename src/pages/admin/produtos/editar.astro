@@ -1,0 +1,261 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+---
+
+<AdminLayout title="Editar produto" active="produtos">
+  <div class="adm-page">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
+      <a class="adm-btn adm-btn--ghost adm-btn--md" href="/admin/produtos">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+        Produtos
+      </a>
+      <span class="adm-ph__spacer"></span>
+      <button class="adm-btn adm-btn--ghost adm-btn--md" type="button" data-cancel>Cancelar</button>
+      <button class="adm-btn adm-btn--primary adm-btn--md" type="submit" form="prodForm" data-save>Salvar</button>
+    </div>
+
+    <h1 class="adm-ph__title" data-title style="margin-bottom:20px">Novo produto</h1>
+
+    <div class="adm-msg adm-msg--err" data-err hidden></div>
+    <div class="adm-msg adm-msg--ok" data-ok hidden></div>
+
+    <form id="prodForm" class="adm-form">
+      <!-- Coluna principal -->
+      <div class="adm-card adm-card-pad adm-stack">
+        <div class="adm-field">
+          <label class="adm-label" for="nome">Nome *</label>
+          <input class="adm-input" id="nome" name="nome" required placeholder="Ex.: Esteira Profissional STK-81" />
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div class="adm-field">
+            <label class="adm-label" for="ref">Referência</label>
+            <input class="adm-input" id="ref" name="ref" placeholder="STK-81" />
+          </div>
+          <div class="adm-field">
+            <label class="adm-label" for="slug">Slug (URL)</label>
+            <input class="adm-input" id="slug" name="slug" placeholder="gerado a partir do nome" />
+          </div>
+        </div>
+        <div class="adm-field">
+          <label class="adm-label" for="preco">Preço</label>
+          <input class="adm-input" id="preco" name="preco" placeholder="Sob orçamento" />
+        </div>
+        <div class="adm-field">
+          <label class="adm-label" for="especificacoes">Especificações</label>
+          <textarea class="adm-textarea" id="especificacoes" name="especificacoes" placeholder="Dimensões, peso, potência…"></textarea>
+        </div>
+        <div class="adm-field">
+          <label class="adm-label" for="descricao">Descrição</label>
+          <textarea class="adm-textarea" id="descricao" name="descricao" style="min-height:160px" placeholder="Texto descritivo do produto…"></textarea>
+        </div>
+      </div>
+
+      <!-- Trilha lateral -->
+      <div class="adm-form__rail">
+        <div class="adm-card adm-card--sm adm-card-pad">
+          <h3 class="adm-card-h">Publicação</h3>
+          <div class="adm-stack">
+            <div class="adm-field">
+              <label class="adm-label" for="categoria">Categoria *</label>
+              <select class="adm-select" id="categoria" name="categoria_id" required>
+                <option value="">Carregando…</option>
+              </select>
+            </div>
+            <label class="adm-switch">
+              <input type="checkbox" name="ativo" checked />
+              <span class="adm-switch__track"></span>
+              <span class="adm-switch__label">Ativo (visível na loja)</span>
+            </label>
+            <label class="adm-switch">
+              <input type="checkbox" name="destaque" />
+              <span class="adm-switch__track"></span>
+              <span class="adm-switch__label">Destaque na home</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="adm-card adm-card--sm adm-card-pad">
+          <h3 class="adm-card-h">Imagem principal</h3>
+          <div class="adm-stack">
+            <div style="border:1px solid var(--line);border-radius:11px;overflow:hidden;aspect-ratio:4/3;background:#eef1f3">
+              <img data-main-preview src="/assets/photo-machine-hero.png" alt="" style="width:100%;height:100%;object-fit:cover" />
+            </div>
+            <input class="adm-input" name="imagem_principal" data-main-input placeholder="/produtos/arquivo.png ou URL" style="font-size:12px" />
+            <label class="adm-dropzone" style="padding:14px">
+              <input type="file" accept="image/*" hidden data-main-file />
+              <span class="adm-dropzone__t" data-main-status>Enviar imagem principal</span>
+              <span class="adm-dropzone__d">PNG, JPG, WebP ou SVG</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="adm-card adm-card--sm adm-card-pad">
+          <h3 class="adm-card-h">Galeria</h3>
+          <div data-gallery-note class="adm-help" style="margin-bottom:10px">Salve o produto para adicionar imagens à galeria.</div>
+          <label class="adm-dropzone" data-gallery-drop hidden style="padding:14px;margin-bottom:12px">
+            <input type="file" accept="image/*" multiple hidden data-gallery-file />
+            <span class="adm-dropzone__t" data-gallery-status>Arraste ou clique para enviar</span>
+            <span class="adm-dropzone__d">Várias imagens · PNG, JPG, WebP</span>
+          </label>
+          <div class="adm-gallery" data-gallery></div>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    import { requireAuth } from '../../../lib/adminAuth';
+    import {
+      listCategorias, getProduto, createProduto, updateProduto,
+      listImagens, addImagem, removeImagem, uploadImagem, slugify,
+      type ProdutoImagem,
+    } from '../../../lib/adminApi';
+
+    const PLACEHOLDER = '/assets/photo-machine-hero.png';
+    const params = new URLSearchParams(location.search);
+    let id = params.get('id') ? Number(params.get('id')) : null;
+
+    const $ = (s: string) => document.querySelector(s) as HTMLElement;
+    const form = document.getElementById('prodForm') as HTMLFormElement;
+    const errEl = $('[data-err]'), okEl = $('[data-ok]');
+    const saveBtn = $('[data-save]') as HTMLButtonElement;
+
+    function showErr(msg: string) { errEl.textContent = msg; errEl.hidden = false; okEl.hidden = true; window.scrollTo({ top: 0, behavior: 'smooth' }); }
+    function showOk(msg: string) { okEl.textContent = msg; okEl.hidden = false; errEl.hidden = true; }
+    function field(name: string) { return form.elements.namedItem(name) as HTMLInputElement; }
+
+    let slugTocado = false;
+    field('slug').addEventListener('input', () => { slugTocado = true; });
+    field('nome').addEventListener('input', () => { if (!slugTocado) field('slug').value = slugify(field('nome').value); });
+
+    const mainInput = $('[data-main-input]') as HTMLInputElement;
+    const mainPreview = $('[data-main-preview]') as HTMLImageElement;
+    const mainFile = $('[data-main-file]') as HTMLInputElement;
+    const mainStatus = $('[data-main-status]');
+    mainInput.addEventListener('input', () => { mainPreview.src = mainInput.value || PLACEHOLDER; });
+    mainFile.addEventListener('change', async () => {
+      const f = mainFile.files?.[0]; if (!f) return;
+      mainStatus.textContent = 'Enviando…';
+      try {
+        const url = await uploadImagem(f);
+        mainInput.value = url; mainPreview.src = url;
+        mainStatus.textContent = 'Trocar imagem principal';
+      } catch (ex) { showErr(ex instanceof Error ? ex.message : 'Falha no upload.'); mainStatus.textContent = 'Enviar imagem principal'; }
+    });
+
+    const galleryDrop = $('[data-gallery-drop]') as HTMLElement;
+    const galleryNote = $('[data-gallery-note]');
+    const galleryFile = $('[data-gallery-file]') as HTMLInputElement;
+    const galleryStatus = $('[data-gallery-status]');
+    const galleryEl = $('[data-gallery]');
+    let imagens: ProdutoImagem[] = [];
+
+    function renderGaleria() {
+      galleryEl.innerHTML = imagens.map((im) => `
+        <div class="adm-gallery__item">
+          <img src="${im.arquivo}" alt="" onerror="this.src='${PLACEHOLDER}'" />
+          <button class="adm-gallery__rm" data-rm="${im.id}" title="Remover">✕</button>
+        </div>`).join('');
+    }
+    galleryEl.addEventListener('click', async (e) => {
+      const btn = (e.target as HTMLElement).closest('[data-rm]') as HTMLElement | null;
+      if (!btn) return;
+      const imgId = Number(btn.dataset.rm);
+      try { await removeImagem(imgId); imagens = imagens.filter((i) => i.id !== imgId); renderGaleria(); }
+      catch (ex) { showErr(ex instanceof Error ? ex.message : 'Falha ao remover.'); }
+    });
+    galleryFile.addEventListener('change', async () => {
+      if (!id || !galleryFile.files?.length) return;
+      galleryStatus.textContent = 'Enviando…';
+      try {
+        let ordem = imagens.length;
+        for (const f of Array.from(galleryFile.files)) {
+          const url = await uploadImagem(f);
+          const nova = await addImagem(id, url, ordem++);
+          imagens.push(nova);
+        }
+        renderGaleria();
+        galleryStatus.textContent = 'Arraste ou clique para enviar';
+      } catch (ex) { showErr(ex instanceof Error ? ex.message : 'Falha no upload.'); galleryStatus.textContent = 'Arraste ou clique para enviar'; }
+      galleryFile.value = '';
+    });
+
+    function habilitarGaleria() { galleryNote.hidden = true; galleryDrop.hidden = false; }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const nome = field('nome').value.trim();
+      const categoria_id = Number(field('categoria_id').value);
+      if (!nome) return showErr('Informe o nome do produto.');
+      if (!categoria_id) return showErr('Selecione uma categoria.');
+
+      const payload = {
+        nome,
+        slug: field('slug').value.trim() || slugify(nome),
+        ref: field('ref').value.trim() || null,
+        categoria_id,
+        preco: field('preco').value.trim() || 'Consultar',
+        especificacoes: (form.elements.namedItem('especificacoes') as HTMLTextAreaElement).value.trim() || null,
+        descricao: (form.elements.namedItem('descricao') as HTMLTextAreaElement).value.trim() || null,
+        imagem_principal: mainInput.value.trim() || null,
+        ativo: (form.elements.namedItem('ativo') as HTMLInputElement).checked,
+        destaque: (form.elements.namedItem('destaque') as HTMLInputElement).checked,
+      };
+
+      saveBtn.disabled = true; saveBtn.textContent = 'Salvando…';
+      try {
+        if (id) {
+          await updateProduto(id, payload);
+          showOk('Produto salvo.');
+        } else {
+          const novo = await createProduto(payload);
+          id = novo.id;
+          history.replaceState(null, '', `/admin/produtos/editar?id=${id}`);
+          $('[data-title]').textContent = payload.nome;
+          habilitarGaleria();
+          showOk('Produto criado. Agora você pode adicionar imagens à galeria.');
+        }
+      } catch (ex) {
+        showErr(ex instanceof Error ? ex.message : 'Falha ao salvar.');
+      } finally {
+        saveBtn.disabled = false; saveBtn.textContent = 'Salvar';
+      }
+    });
+
+    $('[data-cancel]').addEventListener('click', () => { location.href = '/admin/produtos'; });
+
+    (async () => {
+      await requireAuth();
+      try {
+        const cats = await listCategorias();
+        const sel = field('categoria_id') as unknown as HTMLSelectElement;
+        if (!cats.length) {
+          sel.innerHTML = '<option value="">— crie uma categoria primeiro —</option>';
+        } else {
+          sel.innerHTML = cats.map((c) => `<option value="${c.id}">${c.nome}</option>`).join('');
+        }
+        if (id) {
+          const p = await getProduto(id);
+          $('[data-title]').textContent = p.nome;
+          field('nome').value = p.nome;
+          field('ref').value = p.ref || '';
+          field('slug').value = p.slug; slugTocado = true;
+          field('preco').value = p.preco || '';
+          (form.elements.namedItem('especificacoes') as HTMLTextAreaElement).value = p.especificacoes || '';
+          (form.elements.namedItem('descricao') as HTMLTextAreaElement).value = p.descricao || '';
+          (form.elements.namedItem('ativo') as HTMLInputElement).checked = p.ativo;
+          (form.elements.namedItem('destaque') as HTMLInputElement).checked = (p as any).destaque ?? false;
+          sel.value = String(p.categoria_id);
+          mainInput.value = p.imagem_principal || '';
+          mainPreview.src = p.imagem_principal || PLACEHOLDER;
+          if (mainInput.value) mainStatus.textContent = 'Trocar imagem principal';
+          imagens = await listImagens(id);
+          renderGaleria();
+          habilitarGaleria();
+        }
+      } catch (ex) {
+        showErr(ex instanceof Error ? ex.message : 'Falha ao carregar.');
+      }
+    })();
+  </script>
+</AdminLayout>

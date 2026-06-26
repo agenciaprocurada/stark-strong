@@ -1,0 +1,84 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+---
+
+<AdminLayout title="Dashboard" active="dashboard">
+  <div class="adm-page">
+    <header class="adm-ph">
+      <div>
+        <p class="adm-ph__over">Visão geral</p>
+        <h1 class="adm-ph__title">Dashboard</h1>
+        <p class="adm-ph__desc">Resumo do catálogo da sua loja.</p>
+      </div>
+      <span class="adm-ph__spacer"></span>
+      <a class="adm-btn adm-btn--primary adm-btn--md" href="/admin/produtos/editar">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        Novo produto
+      </a>
+    </header>
+
+    <!-- stats -->
+    <div class="adm-grid adm-grid--stats" style="margin-bottom:18px">
+      <div class="adm-stat">
+        <p class="adm-stat__label">Total de produtos</p>
+        <p class="adm-stat__value" data-stat="produtos">—</p>
+      </div>
+      <div class="adm-stat">
+        <p class="adm-stat__label">Ativos</p>
+        <p class="adm-stat__value adm-stat__value--teal" data-stat="ativos">—</p>
+      </div>
+      <div class="adm-stat">
+        <p class="adm-stat__label">Em destaque</p>
+        <p class="adm-stat__value adm-stat__value--brand" data-stat="destaques">—</p>
+      </div>
+      <div class="adm-stat">
+        <p class="adm-stat__label">Categorias</p>
+        <p class="adm-stat__value" data-stat="categorias">—</p>
+      </div>
+      <div class="adm-stat">
+        <p class="adm-stat__label">Banners ativos</p>
+        <p class="adm-stat__value" data-stat="banners">—</p>
+      </div>
+    </div>
+
+    <!-- ações rápidas -->
+    <h3 style="margin:24px 0 14px;font-size:15px;font-weight:700">Ações rápidas</h3>
+    <div class="adm-grid" style="grid-template-columns:repeat(auto-fill,minmax(240px,1fr))">
+      <a class="adm-card adm-card--sm adm-card-pad" href="/admin/produtos/editar" style="display:flex;align-items:center;gap:11px;cursor:pointer">
+        <span style="width:32px;height:32px;border-radius:9px;background:var(--brand-tint);color:var(--brand-deep);display:grid;place-items:center;flex:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>
+        <span style="font-size:13px;font-weight:600">Criar novo produto</span>
+      </a>
+      <a class="adm-card adm-card--sm adm-card-pad" href="/admin/produtos" style="display:flex;align-items:center;gap:11px;cursor:pointer">
+        <span style="width:32px;height:32px;border-radius:9px;background:rgba(0,0,0,.05);color:#5a5a62;display:grid;place-items:center;flex:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></span>
+        <span style="font-size:13px;font-weight:600">Gerenciar produtos</span>
+      </a>
+      <a class="adm-card adm-card--sm adm-card-pad" href="/admin/categorias" style="display:flex;align-items:center;gap:11px;cursor:pointer">
+        <span style="width:32px;height:32px;border-radius:9px;background:var(--teal-tint);color:var(--teal-deep);display:grid;place-items:center;flex:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></span>
+        <span style="font-size:13px;font-weight:600">Gerenciar categorias</span>
+      </a>
+    </div>
+  </div>
+
+  <script>
+    import { requireAuth } from '../../lib/adminAuth';
+    import { getCounts } from '../../lib/adminApi';
+
+    (async () => {
+      await requireAuth();
+      try {
+        const c = await getCounts();
+        const set = (k: string, v: number) => {
+          const el = document.querySelector(`[data-stat="${k}"]`);
+          if (el) el.textContent = String(v);
+        };
+        set('produtos', c.produtos);
+        set('ativos', c.ativos);
+        set('destaques', c.destaques);
+        set('categorias', c.categorias);
+        set('banners', c.banners);
+      } catch (e) {
+        console.error('Falha ao carregar contadores', e);
+      }
+    })();
+  </script>
+</AdminLayout>

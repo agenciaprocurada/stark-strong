@@ -1,0 +1,201 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+---
+
+<AdminLayout title="Editar banner" active="banners">
+  <div class="adm-page">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
+      <a class="adm-btn adm-btn--ghost adm-btn--md" href="/admin/banners">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+        Banners
+      </a>
+      <span class="adm-ph__spacer"></span>
+      <button class="adm-btn adm-btn--ghost adm-btn--md" type="button" data-cancel>Cancelar</button>
+      <button class="adm-btn adm-btn--primary adm-btn--md" type="submit" form="bannerForm" data-save>Salvar</button>
+    </div>
+
+    <h1 class="adm-ph__title" data-title style="margin-bottom:20px">Novo banner</h1>
+
+    <div class="adm-msg adm-msg--err" data-err hidden></div>
+    <div class="adm-msg adm-msg--ok" data-ok hidden></div>
+
+    <form id="bannerForm" class="adm-form">
+      <!-- Coluna principal -->
+      <div class="adm-card adm-card-pad adm-stack">
+        <div class="adm-field">
+          <label class="adm-label" for="eyebrow">Texto de apoio (acima do título)</label>
+          <input class="adm-input" id="eyebrow" name="eyebrow" placeholder="Ex.: Linha profissional 2025" />
+        </div>
+
+        <div class="adm-field">
+          <label class="adm-label" for="titulo">Título</label>
+          <input class="adm-input" id="titulo" name="titulo" placeholder="Ex.: A LINHA QUE TRANSFORMA ACADEMIAS" />
+          <label class="adm-switch" style="margin-top:6px">
+            <input type="checkbox" data-titulo-gold />
+            <span class="adm-switch__track"></span>
+            <span class="adm-switch__label">Destacar o título em dourado</span>
+          </label>
+        </div>
+
+        <div class="adm-field">
+          <label class="adm-label" for="lead">Subtítulo</label>
+          <textarea class="adm-textarea" id="lead" name="lead" placeholder="Texto descritivo (some no mobile)"></textarea>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div class="adm-field">
+            <label class="adm-label" for="b1t">Botão 1 — texto</label>
+            <input class="adm-input" id="b1t" name="botao1_texto" placeholder="Solicitar orçamento" />
+          </div>
+          <div class="adm-field">
+            <label class="adm-label" for="b1l">Botão 1 — link</label>
+            <input class="adm-input" id="b1l" name="botao1_link" placeholder="/produtos" value="/produtos" />
+          </div>
+          <div class="adm-field">
+            <label class="adm-label" for="b2t">Botão 2 — texto</label>
+            <input class="adm-input" id="b2t" name="botao2_texto" placeholder="Linha completa" />
+          </div>
+          <div class="adm-field">
+            <label class="adm-label" for="b2l">Botão 2 — link</label>
+            <input class="adm-input" id="b2l" name="botao2_link" placeholder="/produtos" value="/produtos" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Trilha lateral -->
+      <div class="adm-form__rail">
+        <div class="adm-card adm-card--sm adm-card-pad">
+          <h3 class="adm-card-h">Publicação</h3>
+          <div class="adm-stack">
+            <label class="adm-switch">
+              <input type="checkbox" name="ativo" checked />
+              <span class="adm-switch__track"></span>
+              <span class="adm-switch__label">Ativo (aparece na home)</span>
+            </label>
+            <div class="adm-field">
+              <label class="adm-label" for="ordem">Ordem</label>
+              <input class="adm-input" id="ordem" name="ordem" type="number" value="0" style="max-width:120px" />
+            </div>
+          </div>
+        </div>
+
+        <div class="adm-card adm-card--sm adm-card-pad">
+          <h3 class="adm-card-h">Imagem de fundo</h3>
+          <div class="adm-stack">
+            <div style="border:1px solid var(--line);border-radius:11px;overflow:hidden;aspect-ratio:16/9;background:#eef1f3">
+              <img data-img-preview src="/assets/photo-machine-hero.png" alt="" style="width:100%;height:100%;object-fit:cover" />
+            </div>
+            <input class="adm-input" name="imagem" data-img-input placeholder="/assets/arquivo.png ou URL" style="font-size:12px" />
+            <label class="adm-dropzone" style="padding:14px">
+              <input type="file" accept="image/*" hidden data-img-file />
+              <span class="adm-dropzone__t" data-img-status>Enviar imagem</span>
+              <span class="adm-dropzone__d">PNG, JPG ou WebP — use imagens largas</span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    import { requireAuth } from '../../../lib/adminAuth';
+    import { getBanner, createBanner, updateBanner, uploadImagem } from '../../../lib/adminApi';
+
+    const PLACEHOLDER = '/assets/photo-machine-hero.png';
+    const params = new URLSearchParams(location.search);
+    let id = params.get('id') ? Number(params.get('id')) : null;
+
+    const $ = (s: string) => document.querySelector(s) as HTMLElement;
+    const form = document.getElementById('bannerForm') as HTMLFormElement;
+    const errEl = $('[data-err]'), okEl = $('[data-ok]');
+    const saveBtn = $('[data-save]') as HTMLButtonElement;
+    const goldEl = $('[data-titulo-gold]') as HTMLInputElement;
+
+    function showErr(m: string) { errEl.textContent = m; errEl.hidden = false; okEl.hidden = true; window.scrollTo({ top: 0, behavior: 'smooth' }); }
+    function showOk(m: string) { okEl.textContent = m; okEl.hidden = false; errEl.hidden = true; }
+    function field(name: string) { return form.elements.namedItem(name) as HTMLInputElement; }
+
+    /* ---- imagem ---- */
+    const imgInput = $('[data-img-input]') as HTMLInputElement;
+    const imgPreview = $('[data-img-preview]') as HTMLImageElement;
+    const imgFile = $('[data-img-file]') as HTMLInputElement;
+    const imgStatus = $('[data-img-status]');
+    imgInput.addEventListener('input', () => { imgPreview.src = imgInput.value || PLACEHOLDER; });
+    imgFile.addEventListener('change', async () => {
+      const f = imgFile.files?.[0]; if (!f) return;
+      imgStatus.textContent = 'Enviando…';
+      try {
+        const url = await uploadImagem(f, 'banners');
+        imgInput.value = url; imgPreview.src = url;
+        imgStatus.textContent = 'Trocar imagem';
+      } catch (ex) { showErr(ex instanceof Error ? ex.message : 'Falha no upload.'); imgStatus.textContent = 'Enviar imagem'; }
+    });
+
+    /* ---- salvar ---- */
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const t = field('titulo').value.trim();
+      if (!t) return showErr('Informe o título.');
+
+      const payload = {
+        eyebrow: field('eyebrow').value.trim() || null,
+        titulo: [{ t, gold: goldEl.checked }],
+        lead: (form.elements.namedItem('lead') as HTMLTextAreaElement).value.trim() || null,
+        imagem: imgInput.value.trim() || null,
+        botao1_texto: field('botao1_texto').value.trim() || null,
+        botao1_link: field('botao1_link').value.trim() || '/produtos',
+        botao2_texto: field('botao2_texto').value.trim() || null,
+        botao2_link: field('botao2_link').value.trim() || '/produtos',
+        ativo: (form.elements.namedItem('ativo') as HTMLInputElement).checked,
+        ordem: Number(field('ordem').value) || 0,
+      };
+
+      saveBtn.disabled = true; saveBtn.textContent = 'Salvando…';
+      try {
+        if (id) {
+          await updateBanner(id, payload);
+          showOk('Banner salvo.');
+        } else {
+          const novo = await createBanner(payload);
+          id = novo.id;
+          history.replaceState(null, '', `/admin/banners/editar?id=${id}`);
+          showOk('Banner criado.');
+        }
+        $('[data-title]').textContent = t;
+      } catch (ex) {
+        showErr(ex instanceof Error ? ex.message : 'Falha ao salvar.');
+      } finally {
+        saveBtn.disabled = false; saveBtn.textContent = 'Salvar';
+      }
+    });
+
+    $('[data-cancel]').addEventListener('click', () => { location.href = '/admin/banners'; });
+
+    /* ---- carga inicial ---- */
+    (async () => {
+      await requireAuth();
+      if (!id) return;
+      try {
+        const b = await getBanner(id);
+        const linhas = Array.isArray(b.titulo) ? b.titulo : [];
+        const tituloStr = linhas.map((l) => l.t).join(' ');
+        $('[data-title]').textContent = tituloStr || 'Editar banner';
+        field('titulo').value = tituloStr;
+        goldEl.checked = linhas.some((l) => l.gold);
+        field('eyebrow').value = b.eyebrow || '';
+        (form.elements.namedItem('lead') as HTMLTextAreaElement).value = b.lead || '';
+        field('botao1_texto').value = b.botao1_texto || '';
+        field('botao1_link').value = b.botao1_link || '/produtos';
+        field('botao2_texto').value = b.botao2_texto || '';
+        field('botao2_link').value = b.botao2_link || '/produtos';
+        (form.elements.namedItem('ativo') as HTMLInputElement).checked = b.ativo;
+        field('ordem').value = String(b.ordem);
+        imgInput.value = b.imagem || '';
+        imgPreview.src = b.imagem || PLACEHOLDER;
+        if (b.imagem) imgStatus.textContent = 'Trocar imagem';
+      } catch (ex) {
+        showErr(ex instanceof Error ? ex.message : 'Falha ao carregar.');
+      }
+    })();
+  </script>
+</AdminLayout>

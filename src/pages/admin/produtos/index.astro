@@ -1,0 +1,117 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+---
+
+<AdminLayout title="Produtos" active="produtos">
+  <div class="adm-page">
+    <header class="adm-ph">
+      <div>
+        <p class="adm-ph__over">Catálogo</p>
+        <h1 class="adm-ph__title">Produtos</h1>
+        <p class="adm-ph__desc">Cadastre, edite e organize os produtos da loja.</p>
+      </div>
+      <span class="adm-ph__spacer"></span>
+      <a class="adm-btn adm-btn--primary adm-btn--md" href="/admin/produtos/editar">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        Novo produto
+      </a>
+    </header>
+
+    <div class="adm-toolbar">
+      <div class="adm-search">
+        <input class="adm-input" type="search" placeholder="Buscar por nome, ref ou slug…" data-search />
+      </div>
+    </div>
+
+    <div class="adm-msg adm-msg--err" data-err hidden></div>
+
+    <div data-list>
+      <div class="adm-loading">Carregando produtos…</div>
+    </div>
+  </div>
+
+  <script>
+    import { requireAuth } from '../../../lib/adminAuth';
+    import { listProdutos, deleteProduto, type ProdutoRow } from '../../../lib/adminApi';
+
+    const PLACEHOLDER = '/assets/photo-machine-hero.png';
+    const listEl = document.querySelector('[data-list]') as HTMLElement;
+    const errEl = document.querySelector('[data-err]') as HTMLElement;
+    const searchEl = document.querySelector('[data-search]') as HTMLInputElement;
+    let todos: ProdutoRow[] = [];
+
+    function esc(s: string) {
+      return (s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]!));
+    }
+
+    function render(rows: ProdutoRow[]) {
+      if (!rows.length) {
+        listEl.innerHTML = `<div class="adm-table"><div class="adm-empty"><div class="adm-empty__t">Nenhum produto encontrado</div>Cadastre o primeiro produto para começar.</div></div>`;
+        return;
+      }
+      const cols = 'grid-template-columns:2.4fr 1fr .9fr 1.1fr 92px';
+      const head = `<div class="adm-table__head" style="${cols}"><span>Produto</span><span>Categoria</span><span>Preço</span><span>Status</span><span></span></div>`;
+      const body = rows.map((p) => {
+        const img = esc(p.imagem_principal || PLACEHOLDER);
+        const destaque = p.destaque ? `<span class="adm-pill adm-pill--gold"><span class="adm-pill__dot"></span>Destaque</span>` : '';
+        const ativo = p.ativo
+          ? `<span class="adm-pill adm-pill--on"><span class="adm-pill__dot"></span>Ativo</span>`
+          : `<span class="adm-pill adm-pill--off"><span class="adm-pill__dot"></span>Inativo</span>`;
+        return `<div class="adm-table__row" style="${cols}">
+          <div class="adm-table__id">
+            <img class="adm-table__thumb" src="${img}" alt="" loading="lazy" onerror="this.src='${PLACEHOLDER}'" />
+            <div style="min-width:0">
+              <div class="adm-table__main">${esc(p.name ?? p.nome)}</div>
+              <div class="adm-table__sub">${esc(p.ref || '')}${p.ref ? ' · ' : ''}/${esc(p.slug)}</div>
+            </div>
+          </div>
+          <span class="adm-table__cell">${esc(p.categorias?.nome || '—')}</span>
+          <span class="adm-table__cell adm-table__cell--mono">${esc(p.preco)}</span>
+          <span style="display:flex;gap:6px;flex-wrap:wrap">${ativo}${destaque}</span>
+          <span style="display:flex;gap:6px;justify-content:flex-end;align-items:center">
+            <a class="adm-btn adm-btn--ghost adm-btn--sm" href="/admin/produtos/editar?id=${p.id}">Editar</a>
+            <button class="adm-btn adm-btn--icon" data-del="${p.id}" data-nome="${esc(p.nome)}" title="Excluir">✕</button>
+          </span>
+        </div>`;
+      }).join('');
+      listEl.innerHTML = `<div class="adm-table">${head}${body}</div>`;
+    }
+
+    function aplicarBusca() {
+      const q = searchEl.value.trim().toLowerCase();
+      if (!q) return render(todos);
+      render(todos.filter((p) =>
+        [p.nome, p.ref, p.slug].some((v) => (v || '').toLowerCase().includes(q))
+      ));
+    }
+
+    listEl.addEventListener('click', async (e) => {
+      const btn = (e.target as HTMLElement).closest('[data-del]') as HTMLElement | null;
+      if (!btn) return;
+      const id = Number(btn.dataset.del);
+      if (!confirm(`Excluir o produto "${btn.dataset.nome}"? Esta ação não pode ser desfeita.`)) return;
+      try {
+        await deleteProduto(id);
+        todos = todos.filter((p) => p.id !== id);
+        aplicarBusca();
+      } catch (ex) {
+        errEl.textContent = ex instanceof Error ? ex.message : 'Falha ao excluir.';
+        errEl.hidden = false;
+      }
+    });
+
+    searchEl.addEventListener('input', aplicarBusca);
+
+    (async () => {
+      await requireAuth();
+      try {
+        todos = await listProdutos();
+        render(todos);
+      } catch (ex) {
+        listEl.innerHTML = '';
+        errEl.textContent = ex instanceof Error ? ex.message : 'Falha ao carregar produtos.';
+        errEl.hidden = false;
+      }
+    })();
+  </script>
+</AdminLayout>

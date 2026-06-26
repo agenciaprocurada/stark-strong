@@ -1,0 +1,123 @@
+---
+/* Stark Strong — shell do painel /admin.
+   Design replicado do template "PROC Manager": sidebar branca, marca magenta,
+   área principal clara. Protegido por sessão (client-side): o conteúdo só
+   aparece após confirmar o login; sem sessão, vai pro /admin/login. */
+import '../styles/admin.css';
+
+interface Props {
+  title?: string;
+  active?: 'dashboard' | 'banners' | 'produtos' | 'categorias';
+}
+const { title = 'Painel', active = 'dashboard' } = Astro.props;
+---
+
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="icon" type="image/png" href="/assets/logo-positive.png" />
+    <title>{title} · Stark Strong Admin</title>
+  </head>
+  <body>
+    <div class="adm" data-admin-guard>
+      <div class="adm-scrim" data-scrim></div>
+
+      <!-- ===================== SIDEBAR ===================== -->
+      <aside class="adm-side" data-side>
+        <div class="adm-side__brand">
+          <span class="adm-side__logo">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></svg>
+          </span>
+          <span class="adm-side__brandtxt">
+            <span class="adm-side__name">PROC<b> Manager</b></span>
+            <span class="adm-side__role">por Agência Procurada</span>
+          </span>
+        </div>
+
+        <nav class="adm-nav">
+          <span class="adm-nav__sec">Workspace</span>
+
+          <a class:list={['adm-nav__item', { 'is-active': active === 'dashboard' }]} href="/admin">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
+            Dashboard
+          </a>
+
+          <a class:list={['adm-nav__item', { 'is-active': active === 'banners' }]} href="/admin/banners">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2.5"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
+            Banners
+            <span class="adm-nav__badge" data-badge-banners>·</span>
+          </a>
+
+          <a class:list={['adm-nav__item', { 'is-active': active === 'produtos' }]} href="/admin/produtos">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+            Produtos
+            <span class="adm-nav__badge" data-badge-produtos>·</span>
+          </a>
+
+          <a class:list={['adm-nav__item', { 'is-active': active === 'categorias' }]} href="/admin/categorias">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+            Categorias
+            <span class="adm-nav__badge" data-badge-categorias>·</span>
+          </a>
+        </nav>
+
+        <div class="adm-side__user">
+          <span class="adm-side__avatar" data-avatar>··</span>
+          <span class="adm-side__uinfo">
+            <span class="adm-side__uname" data-email>—</span>
+            <span class="adm-side__ulink" data-logout>Sair</span>
+          </span>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#b6b6bd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-logout style="cursor:pointer"><path d="m6 9 6 6 6-6"/></svg>
+        </div>
+      </aside>
+
+      <!-- ===================== MAIN ===================== -->
+      <div class="adm-main">
+        <slot />
+      </div>
+    </div>
+
+    <script>
+      import { requireAuth, getEmail, iniciais, signOut } from '../lib/adminAuth';
+      import { getCounts } from '../lib/adminApi';
+
+      (async () => {
+        await requireAuth();
+
+        const email = await getEmail();
+        const elEmail = document.querySelector('[data-email]');
+        const elAvatar = document.querySelector('[data-avatar]');
+        if (elEmail) elEmail.textContent = email || 'Administrador';
+        if (elAvatar) elAvatar.textContent = iniciais(email);
+
+        document.querySelectorAll('[data-logout]').forEach((el) =>
+          el.addEventListener('click', (e) => { e.preventDefault(); signOut(); })
+        );
+
+        // menu mobile
+        const side = document.querySelector('[data-side]');
+        const scrim = document.querySelector('[data-scrim]');
+        const toggle = () => { side?.classList.toggle('is-open'); scrim?.classList.toggle('is-open'); };
+        document.querySelector('[data-burger]')?.addEventListener('click', toggle);
+        scrim?.addEventListener('click', toggle);
+
+        // badges de contagem na sidebar
+        try {
+          const c = await getCounts();
+          const bp = document.querySelector('[data-badge-produtos]');
+          const bc = document.querySelector('[data-badge-categorias]');
+          const bb = document.querySelector('[data-badge-banners]');
+          if (bp) bp.textContent = String(c.produtos);
+          if (bc) bc.textContent = String(c.categorias);
+          if (bb) bb.textContent = String(c.banners);
+        } catch {}
+
+        // revela o shell
+        document.querySelector('[data-admin-guard]')?.classList.add('is-ready');
+      })();
+    </script>
+  </body>
+</html>

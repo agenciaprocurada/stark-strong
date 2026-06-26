@@ -1,0 +1,99 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+---
+
+<AdminLayout title="Banners" active="banners">
+  <div class="adm-page">
+    <header class="adm-ph">
+      <div>
+        <p class="adm-ph__over">Página inicial</p>
+        <h1 class="adm-ph__title">Banners</h1>
+        <p class="adm-ph__desc">Os slides do carrossel principal da home.</p>
+      </div>
+      <span class="adm-ph__spacer"></span>
+      <a class="adm-btn adm-btn--primary adm-btn--md" href="/admin/banners/editar">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        Novo banner
+      </a>
+    </header>
+
+    <div class="adm-msg adm-msg--err" data-err hidden></div>
+
+    <div data-list>
+      <div class="adm-loading">Carregando banners…</div>
+    </div>
+  </div>
+
+  <script>
+    import { requireAuth } from '../../../lib/adminAuth';
+    import { listBanners, deleteBanner, type Banner } from '../../../lib/adminApi';
+
+    const PLACEHOLDER = '/assets/photo-machine-hero.png';
+    const listEl = document.querySelector('[data-list]') as HTMLElement;
+    const errEl = document.querySelector('[data-err]') as HTMLElement;
+    let banners: Banner[] = [];
+
+    function esc(s: string) {
+      return (s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]!));
+    }
+    function tituloTexto(b: Banner) {
+      return (Array.isArray(b.titulo) ? b.titulo : []).map((l) => l.t).join(' ');
+    }
+
+    function render() {
+      if (!banners.length) {
+        listEl.innerHTML = `<div class="adm-table"><div class="adm-empty"><div class="adm-empty__t">Nenhum banner</div>Crie o primeiro slide do carrossel.</div></div>`;
+        return;
+      }
+      const cols = 'grid-template-columns:64px 2.4fr 1fr .8fr 92px';
+      const head = `<div class="adm-table__head" style="${cols}"><span></span><span>Banner</span><span>Status</span><span>Ordem</span><span></span></div>`;
+      const body = banners.map((b) => {
+        const img = esc(b.imagem || PLACEHOLDER);
+        const ativo = b.ativo
+          ? `<span class="adm-pill adm-pill--on"><span class="adm-pill__dot"></span>Ativo</span>`
+          : `<span class="adm-pill adm-pill--off"><span class="adm-pill__dot"></span>Oculto</span>`;
+        return `<div class="adm-table__row" style="${cols}">
+          <img class="adm-table__thumb" style="width:56px;height:38px;border-radius:8px" src="${img}" alt="" loading="lazy" onerror="this.src='${PLACEHOLDER}'" />
+          <div style="min-width:0">
+            <div class="adm-table__main">${esc(tituloTexto(b)) || '(sem título)'}</div>
+            <div class="adm-table__sub" style="font-family:inherit;color:var(--muted-2)">${esc(b.eyebrow || '')}</div>
+          </div>
+          <span>${ativo}</span>
+          <span class="adm-table__cell adm-table__cell--mono">${b.ordem}</span>
+          <span style="display:flex;gap:6px;justify-content:flex-end;align-items:center">
+            <a class="adm-btn adm-btn--ghost adm-btn--sm" href="/admin/banners/editar?id=${b.id}">Editar</a>
+            <button class="adm-btn adm-btn--icon" data-del="${b.id}" data-nome="${esc(tituloTexto(b))}" title="Excluir">✕</button>
+          </span>
+        </div>`;
+      }).join('');
+      listEl.innerHTML = `<div class="adm-table">${head}${body}</div>`;
+    }
+
+    listEl.addEventListener('click', async (e) => {
+      const btn = (e.target as HTMLElement).closest('[data-del]') as HTMLElement | null;
+      if (!btn) return;
+      const id = Number(btn.dataset.del);
+      if (!confirm(`Excluir o banner "${btn.dataset.nome}"? Esta ação não pode ser desfeita.`)) return;
+      try {
+        await deleteBanner(id);
+        banners = banners.filter((b) => b.id !== id);
+        render();
+      } catch (ex) {
+        errEl.textContent = ex instanceof Error ? ex.message : 'Falha ao excluir.';
+        errEl.hidden = false;
+      }
+    });
+
+    (async () => {
+      await requireAuth();
+      try {
+        banners = await listBanners();
+        render();
+      } catch (ex) {
+        listEl.innerHTML = '';
+        errEl.textContent = ex instanceof Error ? ex.message : 'Falha ao carregar banners.';
+        errEl.hidden = false;
+      }
+    })();
+  </script>
+</AdminLayout>

@@ -184,3 +184,45 @@ export async function getFeatured(n = 8): Promise<ViewProduct[]> {
 export async function getRelated(p: ViewProduct, n = 3): Promise<ViewProduct[]> {
   return (await getProducts()).filter((x) => x.category === p.category && x.slug !== p.slug).slice(0, n);
 }
+
+/* ---------- banners do carrossel da home ---------- */
+export interface ViewBanner {
+  eyebrow: string;
+  title: { t: string; gold?: boolean }[];
+  lead: string;
+  img: string;
+  primary: string;
+  primaryHref: string;
+  secondary: string;
+  secondaryHref: string;
+}
+
+let _banners: Promise<ViewBanner[]> | null = null;
+
+export function getBanners(): Promise<ViewBanner[]> {
+  if (!_banners || !CACHE) {
+    _banners = supabase
+      .from('banners')
+      .select('eyebrow,titulo,lead,imagem,botao1_texto,botao1_link,botao2_texto,botao2_link')
+      .eq('ativo', true)
+      .order('ordem')
+      .then(({ data, error }) => {
+        if (error) {
+          // tabela ainda não existe / falha: home usa o fallback do componente
+          if (import.meta.env.DEV) console.warn('getBanners:', error.message);
+          return [];
+        }
+        return (data ?? []).map((b: any): ViewBanner => ({
+          eyebrow: b.eyebrow ?? '',
+          title: Array.isArray(b.titulo) ? b.titulo : [],
+          lead: b.lead ?? '',
+          img: b.imagem ?? PLACEHOLDER_IMG,
+          primary: b.botao1_texto ?? 'Solicitar orçamento',
+          primaryHref: b.botao1_link ?? '/produtos',
+          secondary: b.botao2_texto ?? '',
+          secondaryHref: b.botao2_link ?? '/produtos',
+        }));
+      });
+  }
+  return _banners;
+}
