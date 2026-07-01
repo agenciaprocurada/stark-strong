@@ -1,0 +1,280 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+---
+
+<AdminLayout title="Usuários" active="usuarios">
+  <div class="adm-page">
+    <header class="adm-ph">
+      <div>
+        <p class="adm-ph__over">Sistema</p>
+        <h1 class="adm-ph__title">Usuários</h1>
+        <p class="adm-ph__desc">Crie acessos e defina o que cada pessoa pode gerenciar.</p>
+      </div>
+    </header>
+
+    <div class="adm-msg adm-msg--err" data-err hidden></div>
+    <div class="adm-msg adm-msg--ok" data-ok hidden></div>
+
+    <!-- Novo usuário -->
+    <form class="adm-card adm-card--sm adm-card-pad" data-novo style="margin-bottom:20px">
+      <h3 class="adm-card-h">Novo usuário</h3>
+      <div style="display:grid;grid-template-columns:1.2fr 1.4fr 1fr 150px;gap:12px;align-items:end">
+        <div class="adm-field">
+          <label class="adm-label" for="nome">Nome</label>
+          <input class="adm-input" id="nome" name="nome" placeholder="Ex.: Ana Souza" />
+        </div>
+        <div class="adm-field">
+          <label class="adm-label" for="email">E-mail *</label>
+          <input class="adm-input" id="email" name="email" type="email" required placeholder="pessoa@empresa.com" />
+        </div>
+        <div class="adm-field">
+          <label class="adm-label" for="password">Senha *</label>
+          <input class="adm-input" id="password" name="password" type="password" required minlength="6" placeholder="mín. 6 caracteres" />
+        </div>
+        <div class="adm-field">
+          <label class="adm-label" for="papel">Papel</label>
+          <select class="adm-select" id="papel" name="papel" data-papel>
+            <option value="editor">Editor</option>
+            <option value="admin" data-admin-opt>Admin</option>
+          </select>
+        </div>
+      </div>
+
+      <div data-perms-wrap style="margin-top:14px">
+        <label class="adm-label" style="display:block;margin-bottom:8px">Acessos do editor</label>
+        <div class="adm-perms" data-perms></div>
+      </div>
+
+      <div data-admin-note class="adm-help" style="margin-top:12px;display:none">Admin tem acesso total — não precisa marcar nada.</div>
+
+      <div style="margin-top:16px">
+        <button class="adm-btn adm-btn--primary adm-btn--md" type="submit" data-add>Criar usuário</button>
+      </div>
+    </form>
+
+    <div data-list>
+      <div class="adm-loading">Carregando usuários…</div>
+    </div>
+
+    <p class="adm-help" style="margin-top:14px">
+      Para criar logins aqui, o cadastro precisa estar liberado no Supabase (Authentication → Email).
+      Desativar corta o acesso na hora; apagar o login de vez é feito no painel do Supabase.
+    </p>
+  </div>
+
+  <script>
+    import { guardAccess } from '../../../lib/adminAuth';
+    import { listPerfis, createUsuario, updatePerfil, type Perfil, type PermKey } from '../../../lib/adminApi';
+
+    const PERMS: { key: PermKey; label: string; adminOnly?: boolean }[] = [
+      { key: 'orcamentos', label: 'Orçamentos' },
+      { key: 'banners', label: 'Banners' },
+      { key: 'produtos', label: 'Produtos' },
+      { key: 'categorias', label: 'Categorias' },
+      { key: 'config', label: 'Configurações' },
+      { key: 'usuarios', label: 'Usuários', adminOnly: true },
+    ];
+
+    const listEl = document.querySelector('[data-list]') as HTMLElement;
+    const errEl = document.querySelector('[data-err]') as HTMLElement;
+    const okEl = document.querySelector('[data-ok]') as HTMLElement;
+    const formNovo = document.querySelector('[data-novo]') as HTMLFormElement;
+    const permsEl = document.querySelector('[data-perms]') as HTMLElement;
+    const permsWrap = document.querySelector('[data-perms-wrap]') as HTMLElement;
+    const adminNote = document.querySelector('[data-admin-note]') as HTMLElement;
+    const papelSel = document.querySelector('[data-papel]') as HTMLSelectElement;
+
+    let perfis: Perfil[] = [];
+    let souAdmin = false;
+
+    function showErr(m: string) { errEl.textContent = m; errEl.hidden = false; okEl.hidden = true; }
+    function showOk(m: string) { okEl.textContent = m; okEl.hidden = false; errEl.hidden = true; }
+    function esc(s: string) { return (s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]!)); }
+
+    // checkboxes de permissão (reaproveitado no form de criar e na edição)
+    function permsHtml(marcadas: PermKey[], prefix: string) {
+      return PERMS.filter((p) => souAdmin || !p.adminOnly).map((p) => `
+        <label class="adm-perm">
+          <input type="checkbox" data-perm="${prefix}" value="${p.key}" ${marcadas.includes(p.key) ? 'checked' : ''} />
+          <span>${p.label}</span>
+        </label>`).join('');
+    }
+    function lerPerms(prefix: string, scope: ParentNode = document): PermKey[] {
+      return Array.from(scope.querySelectorAll(`[data-perm="${prefix}"]:checked`)).map((el) => (el as HTMLInputElement).value as PermKey);
+    }
+
+    function syncFormPapel() {
+      const isAdmin = papelSel.value === 'admin';
+      permsWrap.style.display = isAdmin ? 'none' : '';
+      adminNote.style.display = isAdmin ? '' : 'none';
+    }
+
+    function pill(p: Perfil) {
+      return p.ativo
+        ? `<span class="adm-pill adm-pill--on"><span class="adm-pill__dot"></span>Ativo</span>`
+        : `<span class="adm-pill adm-pill--off"><span class="adm-pill__dot"></span>Inativo</span>`;
+    }
+    function papelPill(p: Perfil) {
+      return p.papel === 'admin'
+        ? `<span class="adm-pill adm-pill--gold"><span class="adm-pill__dot"></span>Admin</span>`
+        : `<span class="adm-pill adm-pill--off"><span class="adm-pill__dot"></span>Editor</span>`;
+    }
+    function acessosTxt(p: Perfil) {
+      if (p.papel === 'admin') return 'Acesso total';
+      if (!p.permissoes?.length) return 'Sem acessos';
+      return PERMS.filter((x) => p.permissoes.includes(x.key)).map((x) => x.label).join(', ');
+    }
+    function iniciais(p: Perfil) {
+      const base = (p.nome || p.email || 'US').replace(/[^a-zA-ZÀ-ÿ]/g, '');
+      return (base.slice(0, 2) || 'US').toUpperCase();
+    }
+
+    const COLS = 'grid-template-columns:1.8fr 1fr 1.4fr 1fr 150px';
+    function render() {
+      if (!perfis.length) {
+        listEl.innerHTML = `<div class="adm-table"><div class="adm-empty"><div class="adm-empty__t">Nenhum usuário</div>Crie o primeiro acima.</div></div>`;
+        return;
+      }
+      const head = `<div class="adm-table__head" style="${COLS}"><span>Usuário</span><span>Papel</span><span>Acessos</span><span>Status</span><span></span></div>`;
+      const rows = perfis.map((p) => `
+        <div class="adm-table__row" style="${COLS}" data-row="${p.id}">
+          <div class="adm-table__id">
+            <span class="adm-avatar-sm">${esc(iniciais(p))}</span>
+            <div style="min-width:0">
+              <div class="adm-table__main">${esc(p.nome || '—')}</div>
+              <div class="adm-table__sub">${esc(p.email)}</div>
+            </div>
+          </div>
+          <span>${papelPill(p)}</span>
+          <span class="adm-table__cell">${esc(acessosTxt(p))}</span>
+          <span>${pill(p)}</span>
+          <span style="display:flex;gap:6px;justify-content:flex-end;align-items:center">
+            <button class="adm-btn adm-btn--ghost adm-btn--sm" data-edit="${p.id}">Editar</button>
+            <button class="adm-btn adm-btn--ghost adm-btn--sm" data-toggle="${p.id}">${p.ativo ? 'Desativar' : 'Ativar'}</button>
+          </span>
+        </div>`).join('');
+      listEl.innerHTML = `<div class="adm-table">${head}${rows}</div>`;
+    }
+
+    function editRow(p: Perfil) {
+      const row = listEl.querySelector(`[data-row="${p.id}"]`) as HTMLElement;
+      const isAdmin = p.papel === 'admin';
+      const podeEditarPapel = souAdmin; // só admin muda papel/permissão de outros
+      row.style.gridTemplateColumns = '1fr';
+      row.innerHTML = `
+        <div class="adm-edituser">
+          <div class="adm-edituser__head">
+            <span class="adm-avatar-sm">${esc(iniciais(p))}</span>
+            <div style="min-width:0">
+              <div class="adm-table__main">${esc(p.nome || '—')}</div>
+              <div class="adm-table__sub">${esc(p.email)}</div>
+            </div>
+          </div>
+          <div class="adm-edituser__grid">
+            <div class="adm-field">
+              <label class="adm-label">Nome</label>
+              <input class="adm-input" data-e-nome value="${esc(p.nome || '')}" />
+            </div>
+            <div class="adm-field">
+              <label class="adm-label">Papel</label>
+              <select class="adm-select" data-e-papel ${podeEditarPapel ? '' : 'disabled'}>
+                <option value="editor" ${!isAdmin ? 'selected' : ''}>Editor</option>
+                <option value="admin" ${isAdmin ? 'selected' : ''}>Admin</option>
+              </select>
+            </div>
+          </div>
+          <div data-e-perms-wrap style="margin-top:12px;${isAdmin ? 'display:none' : ''}">
+            <label class="adm-label" style="display:block;margin-bottom:8px">Acessos do editor</label>
+            <div class="adm-perms">${permsHtml(p.permissoes || [], 'e')}</div>
+          </div>
+          <div class="adm-edituser__foot">
+            <button class="adm-btn adm-btn--primary adm-btn--sm" data-save="${p.id}">Salvar</button>
+            <button class="adm-btn adm-btn--ghost adm-btn--sm" data-cancel>Cancelar</button>
+          </div>
+        </div>`;
+      const eSel = row.querySelector('[data-e-papel]') as HTMLSelectElement;
+      const eWrap = row.querySelector('[data-e-perms-wrap]') as HTMLElement;
+      eSel?.addEventListener('change', () => { eWrap.style.display = eSel.value === 'admin' ? 'none' : ''; });
+    }
+
+    listEl.addEventListener('click', async (e) => {
+      const t = e.target as HTMLElement;
+      const editBtn = t.closest('[data-edit]') as HTMLElement | null;
+      const saveBtn = t.closest('[data-save]') as HTMLElement | null;
+      const cancelBtn = t.closest('[data-cancel]') as HTMLElement | null;
+      const toggleBtn = t.closest('[data-toggle]') as HTMLElement | null;
+
+      if (editBtn) {
+        const p = perfis.find((x) => x.id === editBtn.dataset.edit);
+        if (p) editRow(p);
+      } else if (cancelBtn) {
+        render();
+      } else if (saveBtn) {
+        const id = saveBtn.dataset.save!;
+        const row = listEl.querySelector(`[data-row="${id}"]`) as HTMLElement;
+        const nome = (row.querySelector('[data-e-nome]') as HTMLInputElement).value.trim() || null;
+        const papel = (row.querySelector('[data-e-papel]') as HTMLSelectElement).value as 'admin' | 'editor';
+        const permissoes = papel === 'admin' ? [] : lerPerms('e', row);
+        try {
+          const upd = await updatePerfil(id, { nome, papel, permissoes });
+          perfis = perfis.map((x) => (x.id === id ? upd : x));
+          render(); showOk('Usuário atualizado.');
+        } catch (ex) { showErr(ex instanceof Error ? ex.message : 'Falha ao salvar.'); }
+      } else if (toggleBtn) {
+        const id = toggleBtn.dataset.toggle!;
+        const p = perfis.find((x) => x.id === id);
+        if (!p) return;
+        try {
+          const upd = await updatePerfil(id, { ativo: !p.ativo });
+          perfis = perfis.map((x) => (x.id === id ? upd : x));
+          render(); showOk(upd.ativo ? 'Usuário ativado.' : 'Usuário desativado.');
+        } catch (ex) { showErr(ex instanceof Error ? ex.message : 'Falha ao alterar status.'); }
+      }
+    });
+
+    papelSel.addEventListener('change', syncFormPapel);
+
+    formNovo.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(formNovo);
+      const email = String(fd.get('email')).trim();
+      const password = String(fd.get('password'));
+      const papel = String(fd.get('papel')) as 'admin' | 'editor';
+      if (!email || !password) return showErr('Informe e-mail e senha.');
+      if (password.length < 6) return showErr('A senha precisa ter ao menos 6 caracteres.');
+      const permissoes = papel === 'admin' ? [] : lerPerms('novo', formNovo);
+      const btn = formNovo.querySelector('[data-add]') as HTMLButtonElement;
+      btn.disabled = true;
+      try {
+        await createUsuario({ email, password, nome: String(fd.get('nome')), papel, permissoes });
+        perfis = await listPerfis();
+        render(); formNovo.reset(); montarPermsNovo(); syncFormPapel();
+        showOk('Usuário criado. Ele já pode entrar com e-mail e senha.');
+      } catch (ex) {
+        showErr(ex instanceof Error ? ex.message : 'Falha ao criar usuário.');
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    function montarPermsNovo() { permsEl.innerHTML = permsHtml([], 'novo'); }
+
+    (async () => {
+      const perfil = await guardAccess('usuarios');
+      souAdmin = perfil.papel === 'admin';
+      if (!souAdmin) {
+        // editor com acesso não pode criar admin nem conceder permissão de usuários
+        (document.querySelector('[data-admin-opt]') as HTMLOptionElement)?.remove();
+      }
+      montarPermsNovo();
+      syncFormPapel();
+      try {
+        perfis = await listPerfis();
+        render();
+      } catch (ex) {
+        listEl.innerHTML = '';
+        showErr(ex instanceof Error ? ex.message : 'Falha ao carregar usuários.');
+      }
+    })();
+  </script>
+</AdminLayout>

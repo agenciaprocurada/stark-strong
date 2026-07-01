@@ -1,0 +1,155 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+---
+
+<AdminLayout title="Configurações" active="config">
+  <div class="adm-page">
+    <header class="adm-ph">
+      <div>
+        <p class="adm-ph__over">Sistema</p>
+        <h1 class="adm-ph__title">Configurações do site</h1>
+        <p class="adm-ph__desc">Contato, localização e horário — usados em todo o site (rodapé, topo, contato).</p>
+      </div>
+      <span class="adm-ph__spacer"></span>
+      <button class="adm-btn adm-btn--primary adm-btn--md" type="submit" form="cfgForm" data-save>Salvar</button>
+    </header>
+
+    <div class="adm-msg adm-msg--err" data-err hidden aria-live="polite"></div>
+    <div class="adm-msg adm-msg--ok" data-ok hidden aria-live="polite"></div>
+
+    <div data-loading class="adm-loading">Carregando configurações…</div>
+
+    <form id="cfgForm" class="adm-stack" hidden style="gap:18px;max-width:760px">
+      <!-- Contato -->
+      <div class="adm-card adm-card-pad">
+        <h3 class="adm-card-h">Entre em contato</h3>
+        <div class="adm-stack">
+          <div class="adm-field">
+            <label class="adm-label" for="telefone">Telefone para atendimento</label>
+            <input class="adm-input" id="telefone" name="telefone" placeholder="(45) 9 9926-5525" />
+          </div>
+          <div class="adm-field">
+            <label class="adm-label" for="whatsapp">Contato pelo WhatsApp</label>
+            <input class="adm-input" id="whatsapp" name="whatsapp" placeholder="(45) 9 9926-5525" />
+            <p class="adm-help" style="margin-top:6px">Vira o link <b>wa.me</b> no site (o DDI 55 é adicionado automaticamente).</p>
+          </div>
+          <div class="adm-field">
+            <label class="adm-label" for="email">Envie um e-mail</label>
+            <input class="adm-input" id="email" name="email" type="email" placeholder="vendas@starkstrong.com.br" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Localização -->
+      <div class="adm-card adm-card-pad">
+        <h3 class="adm-card-h">Nossa localização</h3>
+        <div class="adm-stack">
+          <div style="display:grid;grid-template-columns:2fr 1fr;gap:14px">
+            <div class="adm-field">
+              <label class="adm-label" for="end_rua">Rua / Av.</label>
+              <input class="adm-input" id="end_rua" name="end_rua" placeholder="Rua Lagoa Ibirapuera" />
+            </div>
+            <div class="adm-field">
+              <label class="adm-label" for="end_numero">Número</label>
+              <input class="adm-input" id="end_numero" name="end_numero" placeholder="777" />
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:2fr 1fr 1.3fr;gap:14px">
+            <div class="adm-field">
+              <label class="adm-label" for="end_cidade">Cidade</label>
+              <input class="adm-input" id="end_cidade" name="end_cidade" placeholder="Cascavel" />
+            </div>
+            <div class="adm-field">
+              <label class="adm-label" for="end_estado">Estado</label>
+              <input class="adm-input" id="end_estado" name="end_estado" placeholder="PR" maxlength="2" style="text-transform:uppercase" />
+            </div>
+            <div class="adm-field">
+              <label class="adm-label" for="end_cep">CEP</label>
+              <input class="adm-input" id="end_cep" name="end_cep" placeholder="85817830" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Horário -->
+      <div class="adm-card adm-card-pad">
+        <h3 class="adm-card-h">Horário de atendimento</h3>
+        <div class="adm-field">
+          <label class="adm-label" for="horario">Horário</label>
+          <input class="adm-input" id="horario" name="horario" placeholder="Segunda a sexta das 09:00 às 17:30" />
+        </div>
+      </div>
+
+      <!-- Redes sociais -->
+      <div class="adm-card adm-card-pad">
+        <h3 class="adm-card-h">Redes sociais</h3>
+        <div class="adm-stack">
+          <div class="adm-field">
+            <label class="adm-label" for="instagram">Instagram</label>
+            <input class="adm-input" id="instagram" name="instagram" type="url" placeholder="https://www.instagram.com/starkstrong.br/" />
+          </div>
+          <div class="adm-field">
+            <label class="adm-label" for="youtube">YouTube</label>
+            <input class="adm-input" id="youtube" name="youtube" type="url" placeholder="https://www.youtube.com/@STARKSTRONG" />
+          </div>
+          <div class="adm-field">
+            <label class="adm-label" for="whatsapp_url">WhatsApp (link completo)</label>
+            <input class="adm-input" id="whatsapp_url" name="whatsapp_url" type="url" placeholder="https://api.whatsapp.com/send/?phone=...&text=..." />
+            <p class="adm-help" style="margin-top:6px">Link do ícone de WhatsApp (topo e rodapé). Pode ter mensagem pré-pronta. Se vazio, usa o número de contato acima.</p>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <style>
+    /* garante que o atributo `hidden` vença classes com display (ex.: .adm-stack{display:flex}) */
+    [hidden] { display: none !important; }
+  </style>
+
+  <script>
+    import { guardAccess } from '../../../lib/adminAuth';
+    import { getConfig, updateConfig } from '../../../lib/adminApi';
+
+    const form = document.getElementById('cfgForm') as HTMLFormElement;
+    const loadingEl = document.querySelector('[data-loading]') as HTMLElement;
+    const errEl = document.querySelector('[data-err]') as HTMLElement;
+    const okEl = document.querySelector('[data-ok]') as HTMLElement;
+    const saveBtn = document.querySelector('[data-save]') as HTMLButtonElement;
+
+    function showErr(m: string) { errEl.textContent = m; errEl.hidden = false; okEl.hidden = true; window.scrollTo({ top: 0, behavior: 'smooth' }); }
+    function showOk(m: string) { okEl.textContent = m; okEl.hidden = false; errEl.hidden = true; }
+    function field(name: string) { return form.elements.namedItem(name) as HTMLInputElement; }
+
+    const CAMPOS = ['telefone', 'whatsapp', 'email', 'end_rua', 'end_numero', 'end_cidade', 'end_estado', 'end_cep', 'horario', 'instagram', 'youtube', 'whatsapp_url'];
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const payload: Record<string, string | null> = {};
+      for (const c of CAMPOS) payload[c] = field(c).value.trim() || null;
+
+      saveBtn.disabled = true; saveBtn.textContent = 'Salvando…';
+      try {
+        await updateConfig(payload);
+        showOk('Configurações salvas. O site usa esses dados no próximo build/atualização.');
+      } catch (ex) {
+        showErr(ex instanceof Error ? ex.message : 'Falha ao salvar.');
+      } finally {
+        saveBtn.disabled = false; saveBtn.textContent = 'Salvar';
+      }
+    });
+
+    (async () => {
+      await guardAccess('config');
+      try {
+        const c = await getConfig();
+        for (const k of CAMPOS) field(k).value = (c as any)[k] || '';
+        loadingEl.hidden = true;
+        form.hidden = false;
+      } catch (ex) {
+        loadingEl.hidden = true;
+        showErr(ex instanceof Error ? ex.message : 'Falha ao carregar. A tabela de configurações já foi criada no banco?');
+      }
+    })();
+  </script>
+</AdminLayout>

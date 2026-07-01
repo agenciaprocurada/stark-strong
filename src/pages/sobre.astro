@@ -1,0 +1,239 @@
+---
+/* Stark Strong — página institucional /sobre.
+   Conteúdo de marca extraído do Brandbook: manifesto, essência,
+   posicionamento, propósito, visão, valores e pilares. Rota: /sobre */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import TopBar from '../components/home/TopBar.astro';
+import Header from '../components/home/Header.astro';
+import CategoryNav from '../components/home/CategoryNav.astro';
+import StoreFooter from '../components/home/StoreFooter.astro';
+import Icon from '../components/core/Icon.astro';
+import Button from '../components/core/Button.astro';
+import Pic from '../components/core/Pic.astro';
+import '../styles/home.css';
+
+/* ---------- conteúdo institucional (Brandbook) ---------- */
+const pilares = [
+  ['ruler', 'Biomecânica precisa', 'Ângulos, trajetórias e curvas de resistência projetados para resultado real — do iniciante ao avançado.'],
+  ['shield-check', 'Durabilidade superior', 'Aço estrutural e componentes selecionados para suportar o uso comercial intenso, todos os dias.'],
+  ['gem', 'Design premium', 'Acabamento e presença que elevam a percepção de valor de qualquer ambiente de treino.'],
+  ['handshake', 'Parceria estratégica', 'Acompanhamento próximo do projeto ao pós-venda — somos parceiros do seu crescimento.'],
+];
+
+const valores = [
+  ['award', 'Excelência técnica absoluta', 'Cada detalhe é medido, testado e levado ao padrão mais alto.'],
+  ['handshake', 'Parceria próxima e leal', 'Relação de confiança, do primeiro contato à operação da academia.'],
+  ['users', 'Força coletiva confiante', 'Crescemos junto com nossos parceiros, com segurança e ambição.'],
+  ['trending-up', 'Expansão audaciosa', 'Pensamos grande e agimos para liderar o mercado nacional.'],
+  ['lightbulb', 'Inovação inquieta', 'Nunca acomodados: buscamos sempre a próxima evolução.'],
+];
+---
+<BaseLayout
+  title="Sobre a Stark Strong — Equipamentos de musculação profissional"
+  description="Conheça a Stark Strong: marca brasileira de equipamentos de musculação profissional que une biomecânica precisa, durabilidade superior e design premium. Nossa essência, propósito, visão e valores."
+>
+  <TopBar />
+  <Header />
+  <CategoryNav />
+
+  {/* ============ Manifesto ============ */}
+  <section class="hm-section hm-section--dark ab-manifesto">
+    <div class="ab-manifesto__bg" aria-hidden="true">
+      <Pic src="/assets/photo-gym-dark.png" alt="" loading="eager" />
+    </div>
+    <div class="ab-manifesto__inner" data-reveal>
+      <p class="u-overline">Sobre a Stark Strong</p>
+      <h1 class="ab-manifesto__title">A PERFORMANCE<br /><span>É INEVITÁVEL</span></h1>
+      <p class="ab-manifesto__lead">Menos promessa. Mais performance.</p>
+      <p class="ab-manifesto__pos">
+        Marca brasileira de <strong>equipamentos de musculação profissional</strong> que une
+        biomecânica precisa, durabilidade superior e design premium para transformar
+        academias em <strong>referências de performance</strong>.
+      </p>
+    </div>
+  </section>
+
+  {/* ============ Essência ============ */}
+  <section class="hm-section ab-essence">
+    <div class="ab-essence__grid">
+      <div class="ab-essence__copy" data-reveal="left">
+        <p class="u-overline">Nossa essência</p>
+        <p class="ab-essence__big">O impulso da<br /><span>performance.</span></p>
+        <p class="ab-essence__text">
+          Existimos para <strong>elevar a performance, a retenção de alunos e a percepção
+          de valor</strong> da academia. Não vendemos só máquinas: entregamos o equipamento
+          que vira referência — biomecânica que se sente na primeira série, estrutura que
+          aguenta o dia inteiro e um acabamento que impõe respeito.
+        </p>
+      </div>
+      <figure class="ab-essence__media" data-reveal="right">
+        <Pic src="/assets/photo-machine-hero.png" alt="Equipamento de musculação profissional Stark Strong" loading="lazy" />
+      </figure>
+    </div>
+  </section>
+
+  {/* ============ Pilares ============ */}
+  <section class="hm-section ab-pillars" id="pilares">
+    <div class="hm-sectionhead" data-reveal>
+      <div>
+        <p class="u-overline">No que acreditamos</p>
+        <h2 class="hm-title">OS PILARES DA <span>STARK STRONG</span></h2>
+      </div>
+    </div>
+    <div class="ab-pillars__grid" data-reveal-stagger>
+      {pilares.map(([ic, t, d]) => (
+        <article class="ab-pillar">
+          <span class="ab-pillar__ic"><Icon name={ic} size={24} color="var(--accent)" /></span>
+          <h3 class="ab-pillar__ttl">{t}</h3>
+          <p class="ab-pillar__desc">{d}</p>
+        </article>
+      ))}
+    </div>
+  </section>
+
+  {/* ============ Propósito & Visão ============ */}
+  <section class="hm-section hm-section--dark ab-pv">
+    <div class="ab-pv__grid" data-reveal-stagger>
+      <article class="ab-pv__card">
+        <span class="ab-pv__ic"><Icon name="target" size={26} color="var(--accent)" /></span>
+        <h2 class="ab-pv__ttl">Propósito</h2>
+        <p class="ab-pv__text">
+          Impulsionar o crescimento sustentável do mercado fitness brasileiro,
+          transformando academias parceiras em negócios prósperos.
+        </p>
+      </article>
+      <article class="ab-pv__card">
+        <span class="ab-pv__ic"><Icon name="eye" size={26} color="var(--accent)" /></span>
+        <h2 class="ab-pv__ttl">Visão</h2>
+        <p class="ab-pv__text">
+          Liderar o mercado nacional de equipamentos de musculação e tornar a
+          performance um padrão inevitável.
+        </p>
+      </article>
+    </div>
+  </section>
+
+  {/* ============ Valores ============ */}
+  <section class="hm-section ab-values">
+    <div class="hm-sectionhead" data-reveal>
+      <div>
+        <p class="u-overline">O que nos move</p>
+        <h2 class="hm-title">NOSSOS <span>VALORES</span></h2>
+      </div>
+    </div>
+    <div class="ab-values__list" data-reveal-stagger>
+      {valores.map(([ic, t, d], i) => (
+        <article class="ab-value">
+          <span class="ab-value__num">{String(i + 1).padStart(2, '0')}</span>
+          <span class="ab-value__ic"><Icon name={ic} size={20} color="var(--accent)" /></span>
+          <div class="ab-value__body">
+            <h3 class="ab-value__ttl">{t}</h3>
+            <p class="ab-value__desc">{d}</p>
+          </div>
+        </article>
+      ))}
+    </div>
+  </section>
+
+  {/* ============ Fecho / CTA ============ */}
+  <section class="hm-section hm-section--dark ab-cta">
+    <div class="ab-cta__inner" data-reveal>
+      <h2 class="hm-title">VAMOS TRANSFORMAR SUA ACADEMIA EM <span>REFERÊNCIA</span></h2>
+      <p class="ab-cta__text">
+        Do projeto à instalação, a Stark Strong é a parceira de quem leva o treino a sério.
+      </p>
+      <Button as="a" href="/produtos" variant="primary" size="lg" icon="arrow-right" iconRight>Montar meu orçamento</Button>
+    </div>
+  </section>
+
+  <StoreFooter />
+</BaseLayout>
+
+<style>
+  /* ---------- Manifesto ---------- */
+  .ab-manifesto { position: relative; overflow: hidden; }
+  .ab-manifesto__bg { position: absolute; inset: 0; z-index: 0; }
+  .ab-manifesto__bg img { width: 100%; height: 100%; object-fit: cover; opacity: .28; }
+  .ab-manifesto::after { content: ""; position: absolute; inset: 0; z-index: 1;
+    background: linear-gradient(90deg, var(--bg-dark) 18%, rgba(17,17,17,.72) 60%, rgba(17,17,17,.45) 100%); }
+  .ab-manifesto__inner { position: relative; z-index: 2; max-width: 760px; }
+  .ab-manifesto__inner .u-overline { color: var(--accent); }
+  .ab-manifesto__title { font-family: var(--font-display); font-weight: var(--fw-black);
+    text-transform: uppercase; line-height: .98; letter-spacing: var(--ls-display);
+    font-size: clamp(40px, 7vw, 84px); color: var(--text-on-dark); margin: 14px 0 0; }
+  .ab-manifesto__title span { color: var(--accent); }
+  .ab-manifesto__lead { font-family: var(--font-subhead); font-weight: 600;
+    font-size: clamp(16px, 2.2vw, 22px); color: var(--text-on-dark); margin: 20px 0 0; }
+  .ab-manifesto__pos { font-size: 16px; line-height: 1.7; color: var(--text-on-dark-muted);
+    max-width: 620px; margin: 16px 0 0; }
+  .ab-manifesto__pos strong { color: var(--text-on-dark); font-weight: 600; }
+
+  /* ---------- Essência ---------- */
+  .ab-essence__grid { display: grid; grid-template-columns: 1.05fr .95fr; gap: 48px; align-items: center; }
+  .ab-essence__big { font-family: var(--font-display); font-weight: var(--fw-black);
+    text-transform: uppercase; line-height: .98; letter-spacing: var(--ls-display);
+    font-size: clamp(34px, 4.4vw, 56px); color: var(--text-strong); margin: 12px 0 0; }
+  .ab-essence__big span { color: var(--accent); }
+  .ab-essence__text { font-size: 16px; line-height: 1.75; color: var(--text-body); margin: 22px 0 0; max-width: 520px; }
+  .ab-essence__text strong { color: var(--text-strong); font-weight: 600; }
+  .ab-essence__media { margin: 0; border-radius: var(--radius-md); overflow: hidden;
+    border: 1px solid var(--border-subtle); background: #000; }
+  .ab-essence__media img { width: 100%; height: 100%; object-fit: cover; aspect-ratio: 4/5; }
+
+  /* ---------- Pilares ---------- */
+  .ab-pillars__grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+  .ab-pillar { border: 1px solid var(--border-subtle); border-radius: var(--radius-md);
+    background: var(--surface-card); padding: 26px 24px;
+    transition: border-color var(--dur-base), transform var(--dur-base); }
+  .ab-pillar:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .ab-pillar__ic { width: 46px; height: 46px; border: 1px solid var(--accent); border-radius: var(--radius-sm);
+    display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+  .ab-pillar__ttl { font-family: var(--font-subhead); font-weight: 700; font-size: 17px;
+    color: var(--text-strong); margin: 0 0 9px; }
+  .ab-pillar__desc { font-size: 13.5px; line-height: 1.6; color: var(--text-body); margin: 0; }
+
+  /* ---------- Propósito & Visão ---------- */
+  .ab-pv__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+  .ab-pv__card { border: 1px solid var(--border-on-dark); border-radius: var(--radius-md);
+    background: var(--surface-card-dark); padding: 36px 34px; }
+  .ab-pv__ic { display: flex; width: 52px; height: 52px; align-items: center; justify-content: center;
+    border: 1px solid var(--accent); border-radius: var(--radius-sm); margin-bottom: 20px; }
+  .ab-pv__ttl { font-family: var(--font-display); font-weight: var(--fw-black); text-transform: uppercase;
+    letter-spacing: var(--ls-display); font-size: 28px; color: var(--text-on-dark); margin: 0 0 12px; }
+  .ab-pv__text { font-size: 16px; line-height: 1.7; color: var(--text-on-dark-muted); margin: 0; }
+
+  /* ---------- Valores ---------- */
+  .ab-values__list { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .ab-value { position: relative; display: flex; align-items: flex-start; gap: 16px;
+    border: 1px solid var(--border-subtle); border-radius: var(--radius-md);
+    background: var(--surface-card); padding: 22px 24px;
+    transition: border-color var(--dur-base), transform var(--dur-base); }
+  .ab-value:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .ab-value__num { font-family: var(--font-display); font-weight: var(--fw-black); font-size: 30px;
+    line-height: 1; color: var(--accent); opacity: .28; flex: none; }
+  .ab-value__ic { flex: none; width: 42px; height: 42px; border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; }
+  .ab-value__ttl { font-family: var(--font-subhead); font-weight: 700; font-size: 16px;
+    color: var(--text-strong); margin: 0 0 5px; }
+  .ab-value__desc { font-size: 13.5px; line-height: 1.55; color: var(--text-body); margin: 0; }
+
+  /* ---------- Fecho / CTA ---------- */
+  .ab-cta__inner { text-align: center; max-width: 760px; margin: 0 auto; }
+  .ab-cta__text { font-size: 16px; line-height: 1.7; color: var(--text-on-dark-muted); margin: 16px 0 28px; }
+
+  /* ---------- responsivo ---------- */
+  @media (max-width: 1080px) {
+    .ab-pillars__grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 900px) {
+    .ab-essence__grid { grid-template-columns: 1fr; gap: 32px; }
+    .ab-essence__media img { aspect-ratio: 16/10; }
+    .ab-pv__grid { grid-template-columns: 1fr; }
+    .ab-values__list { grid-template-columns: 1fr; }
+    .ab-manifesto::after { background: linear-gradient(180deg, rgba(17,17,17,.55) 0%, rgba(17,17,17,.82) 100%); }
+  }
+  @media (max-width: 640px) {
+    .ab-pillars__grid { grid-template-columns: 1fr; }
+    .ab-value { flex-wrap: wrap; gap: 12px; }
+  }
+</style>

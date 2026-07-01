@@ -1,5 +1,6 @@
 ---
 import ProductCard from './ProductCard.astro';
+import Icon from '../core/Icon.astro';
 import { getProducts, getCategories } from '../../lib/catalog';
 
 const products = await getProducts();
@@ -16,11 +17,22 @@ const FILTERS = [{ nome: 'Todos', slug: '' }, ...categories.map((c) => ({ nome: 
 
   <p class="hm-products__intro" data-reveal>Monte sua lista de equipamentos e solicite um orçamento único — sem preço público, sem compromisso. Adicione quantos quiser; a Stark Strong retorna com proposta e prazo.</p>
 
-  <div class="hm-filter" id="hm-filter" data-reveal>
-    {FILTERS.map((f, i) => (
-      <button class={`hm-chip${i === 0 ? ' is-active' : ''}`} type="button" data-filter={f.nome} data-slug={f.slug}>{f.nome}</button>
-    ))}
+  <div class="hm-filterbar" data-reveal>
+    {/* botão de filtros — só aparece no mobile */}
+    <button class="hm-filter__toggle" type="button" data-filter-toggle aria-expanded="false" aria-controls="hm-filter">
+      <Icon name="sliders-horizontal" size={16} />
+      <span>Filtros</span>
+      <span class="hm-filter__current" data-filter-current>Todos</span>
+      <Icon name="chevron-down" size={16} class="hm-filter__caret" />
+    </button>
+    <div class="hm-filter" id="hm-filter" data-filter-panel>
+      {FILTERS.map((f, i) => (
+        <button class={`hm-chip${i === 0 ? ' is-active' : ''}`} type="button" data-filter={f.nome} data-slug={f.slug}>{f.nome}</button>
+      ))}
+    </div>
   </div>
+
+  <p class="hm-products__note" id="hm-search-note" hidden></p>
 
   <div class="hm-products" id="hm-products" data-reveal-stagger>
     {products.map((p) => <ProductCard product={p} />)}
@@ -30,20 +42,68 @@ const FILTERS = [{ nome: 'Todos', slug: '' }, ...categories.map((c) => ({ nome: 
 <script>
   const wrap = document.getElementById('hm-filter');
   const grid = document.getElementById('hm-products');
+  const note = document.getElementById('hm-search-note');
   if (wrap && grid) {
     const cards = [...grid.querySelectorAll<HTMLElement>('.hm-prod')];
+    const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+
+    let chipFilter = 'Todos';
+    let query = '';
+
+    const matches = (c: HTMLElement) => {
+      const okCat = chipFilter === 'Todos' || c.dataset.cat === chipFilter;
+      if (!query) return okCat;
+      const name = norm(c.querySelector('.hm-prod__name')?.textContent || '');
+      const cat = norm(c.dataset.cat || '');
+      return okCat && (name.includes(query) || cat.includes(query));
+    };
+
+    const render = () => {
+      let visible = 0;
+      cards.forEach((c) => { const ok = matches(c); c.hidden = !ok; if (ok) visible++; });
+      if (note) {
+        if (query) {
+          const raw = new URLSearchParams(location.search).get('q') || '';
+          note.textContent = visible
+            ? `${visible} resultado${visible > 1 ? 's' : ''} para "${raw}".`
+            : `Nenhum resultado para "${raw}". Mostrando a busca — limpe para ver todo o catálogo.`;
+          note.hidden = false;
+        } else {
+          note.hidden = true;
+        }
+      }
+    };
+
+    // botão "Filtros" do mobile (abre/fecha o painel)
+    const bar = wrap.closest<HTMLElement>('.hm-filterbar');
+    const toggle = bar?.querySelector<HTMLElement>('[data-filter-toggle]');
+    const current = bar?.querySelector<HTMLElement>('[data-filter-current]');
+    const setOpen = (open: boolean) => {
+      bar?.classList.toggle('is-open', open);
+      toggle?.setAttribute('aria-expanded', String(open));
+    };
+    toggle?.addEventListener('click', () => setOpen(!bar?.classList.contains('is-open')));
+
     const apply = (chip: HTMLElement) => {
       wrap.querySelectorAll('.hm-chip').forEach((c) => c.classList.remove('is-active'));
       chip.classList.add('is-active');
-      const f = chip.dataset.filter;
-      cards.forEach((c) => {
-        c.hidden = f !== 'Todos' && c.dataset.cat !== f;
-      });
+      chipFilter = chip.dataset.filter || 'Todos';
+      if (current) current.textContent = chipFilter;   // reflete a escolha no botão
+      query = '';            // navegar por categoria limpa a busca textual
+      render();
+      setOpen(false);        // fecha o painel após escolher (mobile)
     };
+
     wrap.addEventListener('click', (e) => {
       const chip = (e.target as HTMLElement).closest<HTMLElement>('[data-filter]');
       if (chip) apply(chip);
     });
+
+    // clicar fora fecha o painel
+    document.addEventListener('click', (e) => {
+      if (bar && !bar.contains(e.target as Node)) setOpen(false);
+    });
+
     // ativa o filtro vindo da navegação de categorias (ex.: /produtos#cardio)
     const fromHash = () => {
       const slug = decodeURIComponent(location.hash.replace('#', ''));
@@ -51,7 +111,17 @@ const FILTERS = [{ nome: 'Todos', slug: '' }, ...categories.map((c) => ({ nome: 
       const chip = wrap.querySelector<HTMLElement>(`[data-slug="${CSS.escape(slug)}"]`);
       if (chip) apply(chip);
     };
-    fromHash();
+
+    // busca textual vinda do topo (?q=termo)
+    const initialQ = (new URLSearchParams(location.search).get('q') || '').trim();
+    if (initialQ) {
+      query = norm(initialQ);
+      // reflete o termo nos campos de busca do cabeçalho
+      document.querySelectorAll<HTMLInputElement>('input[name="q"]').forEach((i) => { i.value = initialQ; });
+      render();
+    } else {
+      fromHash();
+    }
     window.addEventListener('hashchange', fromHash);
   }
 </script>

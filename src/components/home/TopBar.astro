@@ -1,5 +1,8 @@
 ---
 import Icon from '../core/Icon.astro';
+import { getSiteConfig } from '../../lib/catalog';
+
+const cfg = await getSiteConfig();
 ---
 <div class="hm-topbar">
   <div class="hm-topbar__items">
@@ -10,8 +13,8 @@ import Icon from '../core/Icon.astro';
     <span class="hm-topbar__item">Projeto, instalação e <b>suporte próprio</b></span>
   </div>
   <div class="hm-topbar__social">
-    <a aria-label="Instagram"><Icon name="instagram" size={16} /></a>
-    <a aria-label="YouTube"><Icon name="youtube" size={16} /></a>
-    <a aria-label="WhatsApp"><Icon name="message-circle" size={16} /></a>
+    {cfg.instagram && <a href={cfg.instagram} target="_blank" rel="noopener" aria-label="Instagram"><Icon name="instagram" size={16} /></a>}
+    {cfg.youtube && <a href={cfg.youtube} target="_blank" rel="noopener" aria-label="YouTube"><Icon name="youtube" size={16} /></a>}
+    {cfg.whatsappSocial && <a href={cfg.whatsappSocial} target="_blank" rel="noopener" aria-label="WhatsApp"><Icon name="message-circle" size={16} /></a>}
   </div>
 </div>

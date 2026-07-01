@@ -1,0 +1,444 @@
+---
+/* Stark Strong — revisão do orçamento (tipo carrinho) + dados + envio.
+   Os itens vivem no localStorage (ss_orcamento). Ao enviar, grava no banco
+   via RPC pública e mostra a confirmação. E-mail é o organizador no /admin.
+
+   IMPORTANTE: a lista de itens, o estado vazio e o sucesso são injetados via
+   JS (innerHTML). Por isso o CSS abaixo é `is:global` e fica namespaced em
+   `.oq-page` — estilos scoped do Astro NÃO se aplicam a DOM criado por JS. */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import TopBar from '../components/home/TopBar.astro';
+import Header from '../components/home/Header.astro';
+import CategoryNav from '../components/home/CategoryNav.astro';
+import StoreFooter from '../components/home/StoreFooter.astro';
+import '../styles/home.css';
+---
+<BaseLayout title="Seu orçamento — Stark Strong" description="Revise os equipamentos da sua lista e envie seu pedido de orçamento, sem compromisso.">
+  <TopBar />
+  <Header />
+  <CategoryNav />
+
+  <main class="oq-page hm-section">
+    <header class="oq-head">
+      <span class="oq-rule" aria-hidden="true"></span>
+      <div>
+        <p class="oq-head__eyebrow">Sem compromisso</p>
+        <h1 class="oq-head__title">Seu <span>orçamento</span></h1>
+        <p class="oq-head__lead">Revise os equipamentos da sua lista e envie. Um especialista responde com proposta técnica e prazo em até 1 dia útil.</p>
+      </div>
+    </header>
+
+    <!-- faixa de processo: o envio É uma sequência real -->
+    <ol class="oq-steps" data-oq-steps>
+      <li class="oq-step is-current">
+        <span class="oq-step__num">1</span>
+        <span class="oq-step__txt"><b>Revisar lista</b><small>Ajuste itens e quantidades</small></span>
+      </li>
+      <li class="oq-step">
+        <span class="oq-step__num">2</span>
+        <span class="oq-step__txt"><b>Seus dados</b><small>Para onde enviar a proposta</small></span>
+      </li>
+      <li class="oq-step">
+        <span class="oq-step__num">3</span>
+        <span class="oq-step__txt"><b>Proposta</b><small>Resposta em até 1 dia útil</small></span>
+      </li>
+    </ol>
+
+    <div class="oq-grid" data-oq-grid>
+      <!-- lista de equipamentos -->
+      <section class="oq-list" data-oq-items aria-label="Equipamentos do orçamento"></section>
+
+      <!-- painel escuro: resumo + dados + envio -->
+      <aside class="oq-panel" data-oq-side>
+        <div class="oq-panel__head">
+          <span class="oq-panel__rule" aria-hidden="true"></span>
+          <h2 class="oq-panel__title">Solicitar orçamento</h2>
+        </div>
+
+        <dl class="oq-sum">
+          <div class="oq-sum__row"><dt>Equipamentos</dt><dd data-oq-eq>0</dd></div>
+          <div class="oq-sum__row"><dt>Unidades no total</dt><dd data-oq-un>0</dd></div>
+        </dl>
+
+        <div class="oq-msg oq-msg--err" data-oq-err hidden></div>
+
+        <form id="oqForm" class="oq-form" novalidate>
+          <div class="oq-form__row">
+            <div class="ss-field ss-field--dark">
+              <label class="ss-field__label" for="oq-nome">Nome</label>
+              <input class="ss-field__input" id="oq-nome" name="nome" placeholder="Seu nome" autocomplete="name" />
+            </div>
+            <div class="ss-field ss-field--dark">
+              <label class="ss-field__label" for="oq-academia">Academia / empresa</label>
+              <input class="ss-field__input" id="oq-academia" name="academia" placeholder="Nome da academia" autocomplete="organization" />
+            </div>
+          </div>
+          <div class="ss-field ss-field--dark">
+            <label class="ss-field__label" for="oq-email">E-mail <span class="oq-req">*</span></label>
+            <input class="ss-field__input" id="oq-email" name="email" type="email" required placeholder="seu@email.com.br" autocomplete="email" />
+          </div>
+          <div class="ss-field ss-field--dark">
+            <label class="ss-field__label" for="oq-tel">WhatsApp</label>
+            <input class="ss-field__input" id="oq-tel" name="telefone" placeholder="(45) 90000-0000" autocomplete="tel" inputmode="tel" />
+          </div>
+          <div class="ss-field ss-field--dark">
+            <label class="ss-field__label" for="oq-msg">Observações</label>
+            <textarea class="ss-field__input" id="oq-msg" name="observacoes" rows="2" placeholder="Cidade, prazo de instalação, projeto…"></textarea>
+          </div>
+          <button class="ss-btn ss-btn--primary ss-btn--lg" type="submit" data-oq-send>
+            Enviar pedido de orçamento
+          </button>
+        </form>
+
+        <ul class="oq-trust">
+          <li>Resposta em até <b>1 dia útil</b></li>
+          <li>Projeto, logística e <b>instalação própria</b></li>
+          <li>Atendimento direto com <b>especialista</b></li>
+        </ul>
+      </aside>
+    </div>
+  </main>
+
+  <StoreFooter />
+</BaseLayout>
+
+<script>
+  import { enviarOrcamento, type ItemEnvio } from '../lib/orcamentoApi';
+
+  const KEY = 'ss_orcamento';
+  type Item = { id: string; name: string; category: string; img: string; qty: number };
+
+  const $ = <T extends Element>(s: string) => document.querySelector<T>(s);
+  const grid = $('[data-oq-grid]') as HTMLElement;
+  const itemsEl = $('[data-oq-items]') as HTMLElement;
+  const sideEl = $('[data-oq-side]') as HTMLElement;
+  const stepsEl = $('[data-oq-steps]') as HTMLElement;
+  const form = document.getElementById('oqForm') as HTMLFormElement;
+  const errEl = $('[data-oq-err]') as HTMLElement;
+  const sendBtn = $('[data-oq-send]') as HTMLButtonElement;
+  const eqEl = $('[data-oq-eq]') as HTMLElement;
+  const unEl = $('[data-oq-un]') as HTMLElement;
+
+  const esc = (s: string) =>
+    (s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string));
+
+  function load(): Item[] {
+    try { const r = localStorage.getItem(KEY); return r ? (JSON.parse(r) as Item[]) : []; } catch { return []; }
+  }
+  function save(list: Item[]) { localStorage.setItem(KEY, JSON.stringify(list)); }
+  const units = (l: Item[]) => l.reduce((n, i) => n + i.qty, 0);
+
+  function syncBadge() {
+    const n = units(load());
+    document.querySelectorAll<HTMLElement>('[data-oc-count]').forEach((el) => {
+      el.textContent = String(n); el.hidden = n === 0;
+    });
+  }
+
+  const ico = (d: string, w = 16) =>
+    `<svg width="${w}" height="${w}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+  const I = {
+    minus: '<path d="M5 12h14"/>',
+    plus: '<path d="M5 12h14"/><path d="M12 5v14"/>',
+    trash: '<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
+    arrow: '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',
+    clip: '<rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M9 13l2 2 4-4"/>',
+    check: '<path d="M21.8 10A10 10 0 1 1 17 3.3"/><path d="m9 11 3 3L22 4"/>',
+  };
+
+  function setStep(active: number) {
+    if (!stepsEl) return;
+    Array.from(stepsEl.children).forEach((li, i) => {
+      li.classList.toggle('is-current', i + 1 === active);
+      li.classList.toggle('is-done', i + 1 < active);
+    });
+  }
+
+  function updateSummary(list: Item[]) {
+    if (eqEl) eqEl.textContent = String(list.length);
+    if (unEl) unEl.textContent = String(units(list));
+  }
+
+  function renderItems() {
+    const list = load();
+    updateSummary(list);
+    if (!list.length) {
+      grid.classList.add('is-empty');
+      if (sideEl) sideEl.hidden = true;
+      stepsEl?.classList.add('is-hidden');
+      itemsEl.innerHTML = `
+        <div class="oq-empty">
+          <span class="oq-empty__ico">${ico(I.clip, 30)}</span>
+          <h2>Sua lista está vazia</h2>
+          <p>Adicione equipamentos pela vitrine para montar seu orçamento. Você revisa tudo aqui antes de enviar — sem compromisso.</p>
+          <a class="ss-btn ss-btn--primary ss-btn--lg" href="/produtos">Explorar equipamentos</a>
+        </div>`;
+      return;
+    }
+    grid.classList.remove('is-empty');
+    stepsEl?.classList.remove('is-hidden');
+    if (sideEl) sideEl.hidden = false;
+    const rows = list.map((i) => `
+      <article class="oq-item" data-row="${esc(i.id)}">
+        <div class="oq-item__thumb">
+          <img src="${esc(i.img)}" alt="${esc(i.name)}" loading="lazy" onerror="this.closest('.oq-item__thumb').classList.add('is-noimg')" />
+        </div>
+        <div class="oq-item__body">
+          ${i.category ? `<span class="oq-item__cat">${esc(i.category)}</span>` : ''}
+          <h3 class="oq-item__name">${esc(i.name)}</h3>
+        </div>
+        <div class="oq-item__controls">
+          <div class="oq-qty" role="group" aria-label="Quantidade de ${esc(i.name)}">
+            <button type="button" data-dec="${esc(i.id)}" aria-label="Diminuir">${ico(I.minus)}</button>
+            <span data-qty>${i.qty}</span>
+            <button type="button" data-inc="${esc(i.id)}" aria-label="Aumentar">${ico(I.plus)}</button>
+          </div>
+          <button type="button" class="oq-remove" data-rm="${esc(i.id)}" aria-label="Remover ${esc(i.name)}">${ico(I.trash, 17)}</button>
+        </div>
+      </article>`).join('');
+    itemsEl.innerHTML = `
+      <header class="oq-list__head">
+        <h2 class="oq-list__title">Equipamentos selecionados <span>${list.length}</span></h2>
+        <a class="oq-list__more" href="/produtos">${ico(I.plus, 15)} Adicionar mais</a>
+      </header>
+      <div class="oq-list__rows">${rows}</div>`;
+  }
+
+  function changeQty(id: string, delta: number) {
+    let list = load();
+    const it = list.find((i) => i.id === id);
+    if (!it) return;
+    it.qty += delta;
+    if (it.qty <= 0) list = list.filter((i) => i.id !== id);
+    save(list); syncBadge(); renderItems();
+  }
+  function removeItem(id: string) {
+    save(load().filter((i) => i.id !== id)); syncBadge(); renderItems();
+  }
+
+  itemsEl.addEventListener('click', (e) => {
+    const t = (e.target as HTMLElement).closest<HTMLElement>('[data-inc],[data-dec],[data-rm]');
+    if (!t) return;
+    if (t.dataset.inc) changeQty(t.dataset.inc, 1);
+    else if (t.dataset.dec) changeQty(t.dataset.dec, -1);
+    else if (t.dataset.rm) removeItem(t.dataset.rm);
+  });
+
+  // ao focar o formulário, avança o destaque do passo 1 → 2
+  form.addEventListener('focusin', () => setStep(2), { once: false });
+
+  function showErr(msg: string) {
+    errEl.textContent = msg; errEl.hidden = false;
+    errEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+
+  function renderSuccess(email: string, units: number) {
+    setStep(3);
+    grid.classList.add('is-done');
+    grid.innerHTML = `
+      <div class="oq-success">
+        <span class="oq-success__ring">${ico(I.check, 40)}</span>
+        <h2>Pedido <span>enviado</span></h2>
+        <p>Recebemos sua lista com <b>${units} ${units === 1 ? 'unidade' : 'unidades'}</b>. Um especialista Stark Strong responde no e-mail <b>${esc(email)}</b> com proposta técnica e prazo em até <b>1 dia útil</b>.</p>
+        <div class="oq-success__cta">
+          <a class="ss-btn ss-btn--primary ss-btn--lg" href="/produtos">Continuar navegando</a>
+          <a class="ss-btn ss-btn--secondary ss-btn--lg" href="/">Voltar ao início</a>
+        </div>
+      </div>`;
+    grid.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errEl.hidden = true;
+    const list = load();
+    if (!list.length) return showErr('Seu orçamento está vazio.');
+    const email = (form.elements.namedItem('email') as HTMLInputElement).value.trim();
+    if (!email || !/.+@.+\..+/.test(email)) {
+      showErr('Informe um e-mail válido para receber a proposta.');
+      (form.elements.namedItem('email') as HTMLInputElement).focus();
+      return;
+    }
+
+    const dados = {
+      email,
+      nome: (form.elements.namedItem('nome') as HTMLInputElement).value.trim(),
+      academia: (form.elements.namedItem('academia') as HTMLInputElement).value.trim(),
+      telefone: (form.elements.namedItem('telefone') as HTMLInputElement).value.trim(),
+      observacoes: (form.elements.namedItem('observacoes') as HTMLTextAreaElement).value.trim(),
+    };
+    const itens: ItemEnvio[] = list.map((i) => ({ id: i.id, name: i.name, category: i.category, img: i.img, qty: i.qty }));
+    const totalUnits = units(list);
+
+    sendBtn.disabled = true;
+    sendBtn.classList.add('is-loading');
+    sendBtn.textContent = 'Enviando…';
+    try {
+      await enviarOrcamento(dados, itens);
+      save([]); syncBadge();
+      renderSuccess(email, totalUnits);
+    } catch (ex) {
+      showErr(ex instanceof Error ? ex.message : 'Não foi possível enviar agora. Tente novamente.');
+      sendBtn.disabled = false;
+      sendBtn.classList.remove('is-loading');
+      sendBtn.textContent = 'Enviar pedido de orçamento';
+    }
+  });
+
+  renderItems();
+  syncBadge();
+</script>
+
+<style is:global>
+  /* Página namespaced em .oq-page — conteúdo dinâmico (injetado por JS) exige
+     estilos globais; o prefixo oq- evita qualquer vazamento. */
+  .oq-page { padding-top: 40px; padding-bottom: 88px;
+    --check-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E"); }
+
+  /* ---------- cabeçalho ---------- */
+  .oq-head { display: flex; gap: 18px; align-items: stretch; max-width: 760px; }
+  .oq-head .oq-rule { width: var(--border-w-accent); flex: none; background: var(--gold-rule); border-radius: 2px; }
+  .oq-head__eyebrow {
+    font-family: var(--font-subhead); font-weight: 700; font-size: 12px;
+    letter-spacing: var(--ls-overline); text-transform: uppercase; color: var(--accent-press); margin: 0 0 8px;
+  }
+  .oq-head__title {
+    font-family: var(--font-display); font-weight: var(--fw-black); text-transform: uppercase;
+    line-height: var(--lh-tight); letter-spacing: var(--ls-display); color: var(--text-strong);
+    margin: 0; font-size: clamp(34px, 6vw, 52px);
+  }
+  .oq-head__title span { color: var(--accent); }
+  .oq-head__lead { margin: 14px 0 0; font-size: 16px; line-height: 1.6; color: var(--text-muted); max-width: 60ch; }
+
+  /* ---------- faixa de processo ---------- */
+  .oq-steps {
+    list-style: none; margin: 30px 0 36px; padding: 0;
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;
+  }
+  .oq-steps.is-hidden { display: none; }
+  .oq-step { display: flex; align-items: center; gap: 12px; padding: 14px 16px;
+    border: 1px solid var(--border-subtle); border-radius: var(--radius-md); background: var(--surface-card);
+    position: relative; }
+  .oq-step__num {
+    flex: none; width: 30px; height: 30px; border-radius: var(--radius-pill);
+    display: grid; place-items: center; font-family: var(--font-subhead); font-weight: 700; font-size: 14px;
+    border: 1px solid var(--border-subtle); color: var(--text-muted); background: var(--bg-base);
+  }
+  .oq-step__txt { display: flex; flex-direction: column; gap: 2px; line-height: 1.2; min-width: 0; }
+  .oq-step__txt b { font-family: var(--font-subhead); font-weight: 700; font-size: 13.5px; color: var(--text-strong); }
+  .oq-step__txt small { font-size: 11.5px; color: var(--text-muted); }
+  .oq-step.is-current { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(185,145,75,.12); }
+  .oq-step.is-current .oq-step__num { background: var(--accent); border-color: var(--accent); color: #1a1206; }
+  .oq-step.is-done .oq-step__num { background: var(--text-strong); border-color: var(--text-strong); color: var(--color-off-white); }
+
+  /* ---------- grade ---------- */
+  .oq-grid { display: grid; grid-template-columns: minmax(0, 1fr) 396px; gap: 30px; align-items: start; }
+  .oq-grid.is-empty { grid-template-columns: 1fr; }
+
+  /* ---------- lista de itens ---------- */
+  .oq-list__head { display: flex; align-items: baseline; justify-content: space-between; gap: 14px;
+    padding-bottom: 14px; margin-bottom: 4px; border-bottom: 1px solid var(--border-strong); }
+  .oq-list__title { font-family: var(--font-subhead); font-weight: 700; font-size: 16px; color: var(--text-strong); margin: 0; }
+  .oq-list__title span { color: var(--accent); margin-left: 4px; }
+  .oq-list__more { display: inline-flex; align-items: center; gap: 6px; color: var(--accent-press);
+    font-family: var(--font-subhead); font-weight: 600; font-size: 12.5px; text-decoration: none; white-space: nowrap; }
+  .oq-list__more:hover { color: var(--accent); }
+
+  .oq-item { display: grid; grid-template-columns: 88px 1fr auto; gap: 18px; align-items: center;
+    padding: 18px 0; border-bottom: 1px solid var(--border-subtle); }
+  .oq-item__thumb { width: 88px; height: 88px; border-radius: var(--radius-sm); overflow: hidden;
+    background: #fff; border: 1px solid var(--border-subtle); position: relative; flex: none; }
+  .oq-item__thumb img { width: 100%; height: 100%; object-fit: contain; padding: 8px; }
+  .oq-item__thumb.is-noimg::after { content: ""; position: absolute; inset: 0;
+    background: var(--bg-dark-alt) radial-gradient(circle at 50% 40%, rgba(185,145,75,.18), transparent 60%); }
+  .oq-item__body { min-width: 0; }
+  .oq-item__cat { font-family: var(--font-subhead); font-weight: 700; font-size: 10px; letter-spacing: var(--ls-overline);
+    text-transform: uppercase; color: var(--accent-press); }
+  .oq-item__name { font-family: var(--font-subhead); font-weight: 600; font-size: 16px; color: var(--text-strong);
+    margin: 5px 0 0; line-height: 1.3; }
+  .oq-item__controls { display: flex; align-items: center; gap: 14px; }
+
+  .oq-qty { display: inline-flex; align-items: center; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm);
+    background: var(--surface-card); overflow: hidden; }
+  .oq-qty button { width: 36px; height: 38px; background: transparent; border: none; color: var(--text-strong);
+    cursor: pointer; display: grid; place-items: center; transition: background var(--dur-fast), color var(--dur-fast); }
+  .oq-qty button:hover { background: var(--accent); color: #1a1206; }
+  .oq-qty span { min-width: 34px; text-align: center; font-family: var(--font-subhead); font-weight: 700; font-size: 15px;
+    color: var(--text-strong); border-inline: 1px solid var(--border-subtle); align-self: stretch; display: grid; place-items: center; }
+  .oq-remove { width: 38px; height: 38px; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm);
+    background: transparent; color: var(--text-muted); cursor: pointer; display: grid; place-items: center;
+    transition: all var(--dur-fast); }
+  .oq-remove:hover { border-color: var(--status-danger); color: var(--status-danger); }
+
+  /* ---------- painel escuro (resumo + dados + envio) ---------- */
+  .oq-panel { position: sticky; top: calc(var(--header-h, 71px) + 16px);
+    background: var(--bg-dark); color: var(--text-on-dark); border: 1px solid var(--border-on-dark);
+    border-radius: var(--radius-md); padding: 26px; box-shadow: var(--shadow-md); }
+  .oq-panel__head { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .oq-panel__rule { width: 3px; height: 22px; background: var(--gold-rule); border-radius: 2px; flex: none; }
+  .oq-panel__title { font-family: var(--font-display); font-weight: var(--fw-black); text-transform: uppercase;
+    letter-spacing: var(--ls-display); font-size: 22px; color: var(--text-on-dark); margin: 0; line-height: 1; }
+
+  .oq-sum { margin: 0 0 22px; padding: 0 0 20px; border-bottom: 1px solid var(--border-on-dark); display: grid; gap: 10px; }
+  .oq-sum__row { display: flex; align-items: baseline; justify-content: space-between; }
+  .oq-sum__row dt { font-family: var(--font-subhead); font-weight: 600; font-size: 13px; color: var(--text-on-dark-muted); }
+  .oq-sum__row dd { margin: 0; font-family: var(--font-display); font-weight: var(--fw-black); font-size: 22px;
+    color: var(--accent); line-height: 1; letter-spacing: var(--ls-display); }
+
+  .oq-form { display: grid; gap: 14px; }
+  .oq-form__row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .oq-page .ss-field__input { border-radius: var(--radius-sm); }
+  .oq-page textarea.ss-field__input { resize: vertical; min-height: 58px; font-family: var(--font-body); line-height: 1.5; }
+  .oq-req { color: var(--accent); }
+  .oq-panel .ss-btn { width: 100%; margin-top: 4px; }
+  .ss-btn.is-loading { opacity: .7; cursor: progress; }
+
+  .oq-trust { list-style: none; margin: 20px 0 0; padding: 18px 0 0; border-top: 1px solid var(--border-on-dark);
+    display: grid; gap: 11px; }
+  .oq-trust li { position: relative; padding-left: 26px; font-size: 12.5px; line-height: 1.45; color: var(--text-on-dark-muted); }
+  .oq-trust li b { color: var(--text-on-dark); font-weight: 600; }
+  .oq-trust li::before { content: ""; position: absolute; left: 0; top: 1px; width: 16px; height: 16px;
+    background: var(--accent); -webkit-mask: var(--check-mask) center / contain no-repeat; mask: var(--check-mask) center / contain no-repeat; }
+
+  .oq-msg { border-radius: var(--radius-sm); padding: 11px 14px; font-size: 13px; line-height: 1.4; margin-bottom: 4px; }
+  .oq-msg--err { background: rgba(180,69,47,.16); border: 1px solid rgba(180,69,47,.5); color: #f0b9ab; }
+
+  /* ---------- estado vazio ---------- */
+  .oq-empty { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 16px;
+    padding: 64px 24px; border: 1px dashed var(--border-subtle); border-radius: var(--radius-md); background: var(--surface-card); }
+  .oq-empty__ico { width: 64px; height: 64px; border-radius: var(--radius-pill); display: grid; place-items: center;
+    background: var(--bg-dark); color: var(--accent); }
+  .oq-empty h2 { font-family: var(--font-display); font-weight: var(--fw-black); text-transform: uppercase;
+    font-size: 26px; letter-spacing: var(--ls-display); color: var(--text-strong); margin: 0; }
+  .oq-empty p { font-size: 15px; line-height: 1.6; color: var(--text-muted); margin: 0; max-width: 44ch; }
+  .oq-empty .ss-btn { margin-top: 6px; }
+
+  /* ---------- sucesso ---------- */
+  .oq-success { grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center; text-align: center;
+    gap: 18px; padding: 72px 24px; border: 1px solid var(--border-subtle); border-radius: var(--radius-md);
+    background: var(--surface-card); box-shadow: var(--shadow-sm); }
+  .oq-success__ring { width: 84px; height: 84px; border-radius: var(--radius-pill); display: grid; place-items: center;
+    color: var(--accent); background: rgba(185,145,75,.1); border: 1px solid var(--accent); }
+  .oq-success h2 { font-family: var(--font-display); font-weight: var(--fw-black); text-transform: uppercase;
+    font-size: clamp(28px, 5vw, 38px); letter-spacing: var(--ls-display); color: var(--text-strong); margin: 0; }
+  .oq-success h2 span { color: var(--accent); }
+  .oq-success p { font-size: 16px; line-height: 1.7; color: var(--text-body); margin: 0; max-width: 52ch; }
+  .oq-success b { color: var(--text-strong); }
+  .oq-success__cta { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 6px; }
+
+  /* ---------- responsivo ---------- */
+  @media (max-width: 900px) {
+    .oq-grid { grid-template-columns: 1fr; }
+    .oq-panel { position: static; }
+    .oq-steps { grid-template-columns: 1fr; gap: 10px; }
+  }
+  @media (max-width: 520px) {
+    .oq-item { grid-template-columns: 64px 1fr; gap: 14px; }
+    .oq-item__controls { grid-column: 1 / -1; justify-content: flex-start; }
+    .oq-item__thumb { width: 64px; height: 64px; }
+    .oq-form__row { grid-template-columns: 1fr; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .oq-qty button, .oq-remove, .ss-btn { transition: none; }
+  }
+</style>

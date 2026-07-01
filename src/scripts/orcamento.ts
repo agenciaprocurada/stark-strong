@@ -1,5 +1,5 @@
-/* Stark Strong — orçamento client-side (protótipo, sem backend).
-   Itens persistem no localStorage. "Enviar" simula o pedido e mostra sucesso. */
+/* Stark Strong — mini-carrinho do orçamento (drawer + badge).
+   Itens persistem no localStorage. A revisão e o envio acontecem em /orcamento. */
 
 interface QuoteItem {
   id: string;
@@ -124,56 +124,8 @@ function renderCart(): void {
     <div class="oc-body">${items}</div>
     <div class="oc-foot">
       <div class="oc-foot__count"><span>Itens no orçamento</span><b>${count(list)}</b></div>
-      <button class="ss-btn ss-btn--primary ss-btn--lg" data-oc-checkout>Solicitar orçamento</button>
+      <a class="ss-btn ss-btn--primary ss-btn--lg" href="/orcamento">Revisar e solicitar</a>
       <p class="oc-foot__note">Resposta com proposta e prazo em até 1 dia útil.</p>
-    </div>`;
-}
-
-function renderForm(): void {
-  if (!content) return;
-  content.innerHTML = `
-    <div class="oc-body">
-      <form class="oc-form" id="oc-form" novalidate>
-        <button type="button" class="oc-form__back" data-oc-back>${svg('back', 15)} Voltar</button>
-        <h3>Dados para o <span>orçamento</span></h3>
-        <div class="oc-form__grid">
-          <div class="ss-field ss-field--dark oc-form__full">
-            <label class="ss-field__label" for="oc-nome">Nome</label>
-            <input class="ss-field__input" id="oc-nome" name="nome" required placeholder="Seu nome" />
-          </div>
-          <div class="ss-field ss-field--dark oc-form__full">
-            <label class="ss-field__label" for="oc-academia">Academia / empresa</label>
-            <input class="ss-field__input" id="oc-academia" name="academia" placeholder="Nome da academia" />
-          </div>
-          <div class="ss-field ss-field--dark">
-            <label class="ss-field__label" for="oc-email">E-mail</label>
-            <input class="ss-field__input" id="oc-email" name="email" type="email" required placeholder="seu@email.com.br" />
-          </div>
-          <div class="ss-field ss-field--dark">
-            <label class="ss-field__label" for="oc-tel">WhatsApp</label>
-            <input class="ss-field__input" id="oc-tel" name="telefone" placeholder="(11) 90000-0000" />
-          </div>
-          <div class="ss-field ss-field--dark oc-form__full">
-            <label class="ss-field__label" for="oc-msg">Observações</label>
-            <input class="ss-field__input" id="oc-msg" name="mensagem" placeholder="Cidade, prazo, projeto..." />
-          </div>
-        </div>
-      </form>
-    </div>
-    <div class="oc-foot">
-      <button class="ss-btn ss-btn--primary ss-btn--lg" type="submit" form="oc-form">Enviar pedido de orçamento</button>
-      <p class="oc-foot__note">Protótipo — nenhum dado é enviado a um servidor.</p>
-    </div>`;
-}
-
-function renderSuccess(): void {
-  if (!content) return;
-  content.innerHTML = `
-    <div class="oc-success">
-      ${svg('check', 56)}
-      <h3>Pedido <span>enviado</span></h3>
-      <p>Recebemos sua lista. Um especialista Stark Strong retorna com proposta e prazo em até 1 dia útil.</p>
-      <button class="ss-btn ss-btn--dark ss-btn--lg" data-oc-close>Fechar</button>
     </div>`;
 }
 
@@ -206,7 +158,7 @@ function removeItem(id: string): void {
 /* ---- events ---- */
 document.addEventListener('click', (e) => {
   const t = (e.target as HTMLElement).closest<HTMLElement>(
-    '[data-add-orcamento],[data-oc-open],[data-oc-close],[data-oc-dec],[data-oc-inc],[data-oc-remove],[data-oc-checkout],[data-oc-back]'
+    '[data-add-orcamento],[data-oc-open],[data-oc-close],[data-oc-dec],[data-oc-inc],[data-oc-remove]'
   );
   if (!t) return;
 
@@ -228,26 +180,12 @@ document.addEventListener('click', (e) => {
     changeQty(t.dataset.ocInc!, 1);
   } else if (t.hasAttribute('data-oc-remove')) {
     removeItem(t.dataset.ocRemove!);
-  } else if (t.hasAttribute('data-oc-checkout')) {
-    renderForm();
-  } else if (t.hasAttribute('data-oc-back')) {
-    renderCart();
   }
 });
 
 overlay?.addEventListener('click', closeDrawer);
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') closeDrawer();
-});
-
-document.addEventListener('submit', (e) => {
-  const form = e.target as HTMLFormElement;
-  if (form.id !== 'oc-form') return;
-  e.preventDefault();
-  if (!form.reportValidity()) return;
-  save([]); // limpa o orçamento após "enviar"
-  updateBadge();
-  renderSuccess();
 });
 
 /* init */

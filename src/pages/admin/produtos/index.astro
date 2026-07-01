@@ -21,6 +21,15 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
       <div class="adm-search">
         <input class="adm-input" type="search" placeholder="Buscar por nome, ref ou slug…" data-search />
       </div>
+      <span class="adm-ph__spacer"></span>
+      <div class="adm-seg" role="group" aria-label="Modo de visualização">
+        <button type="button" class="adm-seg__btn is-active" data-view-btn="list" title="Lista" aria-label="Visualizar em lista">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        </button>
+        <button type="button" class="adm-seg__btn" data-view-btn="thumb" title="Miniaturas" aria-label="Visualizar em miniaturas">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
+        </button>
+      </div>
     </div>
 
     <div class="adm-msg adm-msg--err" data-err hidden></div>
@@ -31,32 +40,35 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
   </div>
 
   <script>
-    import { requireAuth } from '../../../lib/adminAuth';
+    import { guardAccess } from '../../../lib/adminAuth';
     import { listProdutos, deleteProduto, type ProdutoRow } from '../../../lib/adminApi';
 
     const PLACEHOLDER = '/assets/photo-machine-hero.png';
     const listEl = document.querySelector('[data-list]') as HTMLElement;
     const errEl = document.querySelector('[data-err]') as HTMLElement;
     const searchEl = document.querySelector('[data-search]') as HTMLInputElement;
+    const viewBtns = Array.from(document.querySelectorAll('[data-view-btn]')) as HTMLButtonElement[];
+    const VIEW_KEY = 'adm:produtos:view';
+    let view: 'list' | 'thumb' = localStorage.getItem(VIEW_KEY) === 'thumb' ? 'thumb' : 'list';
     let todos: ProdutoRow[] = [];
 
     function esc(s: string) {
       return (s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]!));
     }
 
-    function render(rows: ProdutoRow[]) {
-      if (!rows.length) {
-        listEl.innerHTML = `<div class="adm-table"><div class="adm-empty"><div class="adm-empty__t">Nenhum produto encontrado</div>Cadastre o primeiro produto para começar.</div></div>`;
-        return;
-      }
+    function pills(p: ProdutoRow) {
+      const destaque = p.destaque ? `<span class="adm-pill adm-pill--gold"><span class="adm-pill__dot"></span>Destaque</span>` : '';
+      const ativo = p.ativo
+        ? `<span class="adm-pill adm-pill--on"><span class="adm-pill__dot"></span>Ativo</span>`
+        : `<span class="adm-pill adm-pill--off"><span class="adm-pill__dot"></span>Inativo</span>`;
+      return ativo + destaque;
+    }
+
+    function renderLista(rows: ProdutoRow[]) {
       const cols = 'grid-template-columns:2.4fr 1fr .9fr 1.1fr 92px';
       const head = `<div class="adm-table__head" style="${cols}"><span>Produto</span><span>Categoria</span><span>Preço</span><span>Status</span><span></span></div>`;
       const body = rows.map((p) => {
         const img = esc(p.imagem_principal || PLACEHOLDER);
-        const destaque = p.destaque ? `<span class="adm-pill adm-pill--gold"><span class="adm-pill__dot"></span>Destaque</span>` : '';
-        const ativo = p.ativo
-          ? `<span class="adm-pill adm-pill--on"><span class="adm-pill__dot"></span>Ativo</span>`
-          : `<span class="adm-pill adm-pill--off"><span class="adm-pill__dot"></span>Inativo</span>`;
         return `<div class="adm-table__row" style="${cols}">
           <div class="adm-table__id">
             <img class="adm-table__thumb" src="${img}" alt="" loading="lazy" onerror="this.src='${PLACEHOLDER}'" />
@@ -67,7 +79,7 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
           </div>
           <span class="adm-table__cell">${esc(p.categorias?.nome || '—')}</span>
           <span class="adm-table__cell adm-table__cell--mono">${esc(p.preco)}</span>
-          <span style="display:flex;gap:6px;flex-wrap:wrap">${ativo}${destaque}</span>
+          <span style="display:flex;gap:6px;flex-wrap:wrap">${pills(p)}</span>
           <span style="display:flex;gap:6px;justify-content:flex-end;align-items:center">
             <a class="adm-btn adm-btn--ghost adm-btn--sm" href="/admin/produtos/editar?id=${p.id}">Editar</a>
             <button class="adm-btn adm-btn--icon" data-del="${p.id}" data-nome="${esc(p.nome)}" title="Excluir">✕</button>
@@ -77,6 +89,37 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
       listEl.innerHTML = `<div class="adm-table">${head}${body}</div>`;
     }
 
+    function renderThumb(rows: ProdutoRow[]) {
+      const body = rows.map((p) => {
+        const img = esc(p.imagem_principal || PLACEHOLDER);
+        return `<div class="adm-pcard">
+          <a class="adm-pcard__media" href="/admin/produtos/editar?id=${p.id}">
+            <img src="${img}" alt="" loading="lazy" onerror="this.src='${PLACEHOLDER}'" />
+            <span class="adm-pcard__pills">${pills(p)}</span>
+          </a>
+          <div class="adm-pcard__body">
+            <div class="adm-pcard__name">${esc(p.name ?? p.nome)}</div>
+            <div class="adm-pcard__sub">${esc(p.categorias?.nome || '—')}</div>
+            <div class="adm-pcard__price">${esc(p.preco)}</div>
+          </div>
+          <div class="adm-pcard__foot">
+            <a class="adm-btn adm-btn--ghost adm-btn--sm" href="/admin/produtos/editar?id=${p.id}">Editar</a>
+            <button class="adm-btn adm-btn--icon" data-del="${p.id}" data-nome="${esc(p.nome)}" title="Excluir">✕</button>
+          </div>
+        </div>`;
+      }).join('');
+      listEl.innerHTML = `<div class="adm-cards">${body}</div>`;
+    }
+
+    function render(rows: ProdutoRow[]) {
+      if (!rows.length) {
+        listEl.innerHTML = `<div class="adm-table"><div class="adm-empty"><div class="adm-empty__t">Nenhum produto encontrado</div>Cadastre o primeiro produto para começar.</div></div>`;
+        return;
+      }
+      if (view === 'thumb') renderThumb(rows);
+      else renderLista(rows);
+    }
+
     function aplicarBusca() {
       const q = searchEl.value.trim().toLowerCase();
       if (!q) return render(todos);
@@ -84,6 +127,16 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
         [p.nome, p.ref, p.slug].some((v) => (v || '').toLowerCase().includes(q))
       ));
     }
+
+    function setView(next: 'list' | 'thumb') {
+      view = next;
+      localStorage.setItem(VIEW_KEY, next);
+      viewBtns.forEach((b) => b.classList.toggle('is-active', b.dataset.viewBtn === next));
+      aplicarBusca();
+    }
+
+    viewBtns.forEach((b) => b.addEventListener('click', () => setView(b.dataset.viewBtn as 'list' | 'thumb')));
+    viewBtns.forEach((b) => b.classList.toggle('is-active', b.dataset.viewBtn === view));
 
     listEl.addEventListener('click', async (e) => {
       const btn = (e.target as HTMLElement).closest('[data-del]') as HTMLElement | null;
@@ -103,7 +156,7 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
     searchEl.addEventListener('input', aplicarBusca);
 
     (async () => {
-      await requireAuth();
+      await guardAccess('produtos');
       try {
         todos = await listProdutos();
         render(todos);

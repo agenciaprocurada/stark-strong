@@ -1,6 +1,13 @@
 ## Ambiente local
 
 - Dev: `npm run dev` → http://localhost:4321
+- Tudo que neste projeto for trabalhado deve permanecer dentro de C:\Users\agenc\meusprojetos\starkstrongs
+
+### Stark Strong — painel /admin
+- URL: http://localhost:4321/admin/login
+- Usuário: admin@starkstrong.com.br
+- Senha: StarkStrong@2026
+- (credencial de teste — trocar antes de produção)
 
 ## Revisão obrigatória ao finalizar
 

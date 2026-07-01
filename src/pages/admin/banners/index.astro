@@ -8,7 +8,7 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
       <div>
         <p class="adm-ph__over">Página inicial</p>
         <h1 class="adm-ph__title">Banners</h1>
-        <p class="adm-ph__desc">Os slides do carrossel principal da home.</p>
+        <p class="adm-ph__desc">Os slides do carrossel principal da home. Arraste para reordenar.</p>
       </div>
       <span class="adm-ph__spacer"></span>
       <a class="adm-btn adm-btn--primary adm-btn--md" href="/admin/banners/editar">
@@ -18,19 +18,30 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
     </header>
 
     <div class="adm-msg adm-msg--err" data-err hidden></div>
+    <div class="adm-msg adm-msg--ok" data-ok hidden></div>
 
     <div data-list>
       <div class="adm-loading">Carregando banners…</div>
     </div>
   </div>
 
+  <style>
+    .bn-row { cursor: default; }
+    .bn-row.is-drag { opacity: .45; }
+    .bn-handle { display: flex; align-items: center; justify-content: center; cursor: grab; color: var(--muted-3); }
+    .bn-handle:active { cursor: grabbing; }
+    .bn-badge { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
+    .bn-badge--img { border-color: var(--brand-border); background: var(--brand-tint); color: var(--brand-deep); }
+  </style>
+
   <script>
-    import { requireAuth } from '../../../lib/adminAuth';
-    import { listBanners, deleteBanner, type Banner } from '../../../lib/adminApi';
+    import { guardAccess } from '../../../lib/adminAuth';
+    import { listBanners, deleteBanner, reorderBanners, type Banner } from '../../../lib/adminApi';
 
     const PLACEHOLDER = '/assets/photo-machine-hero.png';
     const listEl = document.querySelector('[data-list]') as HTMLElement;
     const errEl = document.querySelector('[data-err]') as HTMLElement;
+    const okEl = document.querySelector('[data-ok]') as HTMLElement;
     let banners: Banner[] = [];
 
     function esc(s: string) {
@@ -39,36 +50,108 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
     function tituloTexto(b: Banner) {
       return (Array.isArray(b.titulo) ? b.titulo : []).map((l) => l.t).join(' ');
     }
+    function nomeBanner(b: Banner) {
+      if (b.tipo === 'imagem') return tituloTexto(b) || 'Banner-imagem';
+      return tituloTexto(b) || '(sem título)';
+    }
+
+    const cols = 'grid-template-columns:34px 64px 2.2fr 1fr .7fr 92px';
 
     function render() {
       if (!banners.length) {
         listEl.innerHTML = `<div class="adm-table"><div class="adm-empty"><div class="adm-empty__t">Nenhum banner</div>Crie o primeiro slide do carrossel.</div></div>`;
         return;
       }
-      const cols = 'grid-template-columns:64px 2.4fr 1fr .8fr 92px';
-      const head = `<div class="adm-table__head" style="${cols}"><span></span><span>Banner</span><span>Status</span><span>Ordem</span><span></span></div>`;
+      const head = `<div class="adm-table__head" style="${cols}"><span></span><span></span><span>Banner</span><span>Tipo · status</span><span>Ordem</span><span></span></div>`;
       const body = banners.map((b) => {
         const img = esc(b.imagem || PLACEHOLDER);
         const ativo = b.ativo
           ? `<span class="adm-pill adm-pill--on"><span class="adm-pill__dot"></span>Ativo</span>`
           : `<span class="adm-pill adm-pill--off"><span class="adm-pill__dot"></span>Oculto</span>`;
-        return `<div class="adm-table__row" style="${cols}">
-          <img class="adm-table__thumb" style="width:56px;height:38px;border-radius:8px" src="${img}" alt="" loading="lazy" onerror="this.src='${PLACEHOLDER}'" />
+        const badge = b.tipo === 'imagem'
+          ? `<span class="bn-badge bn-badge--img">Imagem</span>`
+          : `<span class="bn-badge">Editável</span>`;
+        return `<div class="adm-table__row bn-row" style="${cols}" draggable="true" data-id="${b.id}">
+          <span class="bn-handle" title="Arraste para reordenar">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>
+          </span>
+          <img class="adm-table__thumb" style="width:56px;height:38px;border-radius:8px;object-fit:cover" src="${img}" alt="" loading="lazy" onerror="this.src='${PLACEHOLDER}'" />
           <div style="min-width:0">
-            <div class="adm-table__main">${esc(tituloTexto(b)) || '(sem título)'}</div>
-            <div class="adm-table__sub" style="font-family:inherit;color:var(--muted-2)">${esc(b.eyebrow || '')}</div>
+            <div class="adm-table__main">${esc(nomeBanner(b))}</div>
+            <div class="adm-table__sub" style="font-family:inherit;color:var(--muted-2)">${esc(b.eyebrow || (b.tipo === 'imagem' ? (b.largura === 'limitado' ? 'Imagem · limitada' : 'Imagem · full width') : ''))}</div>
           </div>
-          <span>${ativo}</span>
+          <span style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">${badge}${ativo}</span>
           <span class="adm-table__cell adm-table__cell--mono">${b.ordem}</span>
           <span style="display:flex;gap:6px;justify-content:flex-end;align-items:center">
             <a class="adm-btn adm-btn--ghost adm-btn--sm" href="/admin/banners/editar?id=${b.id}">Editar</a>
-            <button class="adm-btn adm-btn--icon" data-del="${b.id}" data-nome="${esc(tituloTexto(b))}" title="Excluir">✕</button>
+            <button class="adm-btn adm-btn--icon" data-del="${b.id}" data-nome="${esc(nomeBanner(b))}" title="Excluir">✕</button>
           </span>
         </div>`;
       }).join('');
-      listEl.innerHTML = `<div class="adm-table">${head}${body}</div>`;
+      listEl.innerHTML = `<div class="adm-table">${head}<div data-rows>${body}</div></div>`;
+      wireDrag();
     }
 
+    /* ---------- drag-and-drop ---------- */
+    function wireDrag() {
+      const rowsEl = listEl.querySelector('[data-rows]') as HTMLElement | null;
+      if (!rowsEl) return;
+      let dragging: HTMLElement | null = null;
+
+      const afterElement = (y: number) => {
+        const rows = [...rowsEl.querySelectorAll('.bn-row:not(.is-drag)')] as HTMLElement[];
+        return rows.reduce<{ offset: number; el: HTMLElement | null }>((closest, row) => {
+          const box = row.getBoundingClientRect();
+          const offset = y - box.top - box.height / 2;
+          if (offset < 0 && offset > closest.offset) return { offset, el: row };
+          return closest;
+        }, { offset: -Infinity, el: null }).el;
+      };
+
+      rowsEl.querySelectorAll('.bn-row').forEach((r) => {
+        const row = r as HTMLElement;
+        row.addEventListener('dragstart', (e) => {
+          dragging = row;
+          row.classList.add('is-drag');
+          (e as DragEvent).dataTransfer!.effectAllowed = 'move';
+        });
+        row.addEventListener('dragend', async () => {
+          row.classList.remove('is-drag');
+          dragging = null;
+          await persistOrder();
+        });
+      });
+
+      rowsEl.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        if (!dragging) return;
+        const after = afterElement((e as DragEvent).clientY);
+        if (after == null) rowsEl.appendChild(dragging);
+        else rowsEl.insertBefore(dragging, after);
+      });
+    }
+
+    async function persistOrder() {
+      const rowsEl = listEl.querySelector('[data-rows]') as HTMLElement;
+      const ids = [...rowsEl.querySelectorAll('.bn-row')].map((r) => Number((r as HTMLElement).dataset.id));
+      const same = ids.every((id, i) => banners[i]?.id === id);
+      if (same) return;
+      // reordena o array em memória conforme o DOM e renumera
+      banners = ids.map((id, i) => { const b = banners.find((x) => x.id === id)!; b.ordem = i; return b; });
+      try {
+        await reorderBanners(ids);
+        okEl.textContent = 'Ordem atualizada.'; okEl.hidden = false; errEl.hidden = true;
+        render();
+        setTimeout(() => (okEl.hidden = true), 1600);
+      } catch (ex) {
+        errEl.textContent = ex instanceof Error ? ex.message : 'Falha ao salvar a ordem.';
+        errEl.hidden = false;
+        try { banners = await listBanners(); } catch {}
+        render();
+      }
+    }
+
+    /* ---------- excluir ---------- */
     listEl.addEventListener('click', async (e) => {
       const btn = (e.target as HTMLElement).closest('[data-del]') as HTMLElement | null;
       if (!btn) return;
@@ -85,7 +168,7 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
     });
 
     (async () => {
-      await requireAuth();
+      await guardAccess('banners');
       try {
         banners = await listBanners();
         render();

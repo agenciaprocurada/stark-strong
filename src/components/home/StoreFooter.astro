@@ -1,10 +1,21 @@
 ---
 import Icon from '../core/Icon.astro';
 import Pic from '../core/Pic.astro';
+import { getSiteConfig } from '../../lib/catalog';
+
+const cfg = await getSiteConfig();
 
 const cols = [
-  ['Institucional', ['Sobre a Stark Strong', 'Nossa tecnologia', 'Trabalhe conosco', 'Blog']],
-  ['Atendimento', ['Central de ajuda', 'Como funciona o orçamento', 'Frete e entrega', 'Garantia']],
+  ['Institucional', [
+    { l: 'Sobre a Stark Strong', href: '/sobre' },
+    { l: 'Nossa tecnologia', href: '/sobre#pilares' },
+  ]],
+  ['Atendimento', [
+    { l: 'Central de ajuda', href: '/central-de-ajuda' },
+    { l: 'Como funciona o orçamento' },
+    { l: 'Frete e entrega' },
+    { l: 'Garantia' },
+  ]],
 ] as const;
 const steps = ['Projeto', 'Fabricação', 'Logística', 'Instalação', 'Suporte'];
 ---
@@ -14,23 +25,24 @@ const steps = ['Projeto', 'Fabricação', 'Logística', 'Instalação', 'Suporte
       <Pic src="/assets/logo-negative.png" alt="Stark Strong" />
       <p>Equipamentos de musculação profissional. A performance é inevitável — do projeto à instalação da sua academia.</p>
       <div class="hm-footer__social">
-        <a aria-label="Instagram"><Icon name="instagram" size={17} /></a>
-        <a aria-label="YouTube"><Icon name="youtube" size={17} /></a>
-        <a aria-label="WhatsApp"><Icon name="message-circle" size={17} /></a>
+        {cfg.instagram && <a href={cfg.instagram} target="_blank" rel="noopener" aria-label="Instagram"><Icon name="instagram" size={17} /></a>}
+        {cfg.youtube && <a href={cfg.youtube} target="_blank" rel="noopener" aria-label="YouTube"><Icon name="youtube" size={17} /></a>}
+        {cfg.whatsappSocial && <a href={cfg.whatsappSocial} target="_blank" rel="noopener" aria-label="WhatsApp"><Icon name="message-circle" size={17} /></a>}
       </div>
     </div>
     {cols.map(([h, links]) => (
       <div class="hm-footer__col">
         <h4>{h}</h4>
-        {links.map((l) => <a>{l}</a>)}
+        {links.map((it) => (it.href ? <a href={it.href}>{it.l}</a> : <a>{it.l}</a>))}
       </div>
     ))}
     <div class="hm-footer__col hm-footer__contact">
       <h4>Contato</h4>
-      <span><Icon name="map-pin" size={16} color="var(--accent)" /> São Paulo · SP — atendemos todo o Brasil</span>
-      <span><Icon name="phone" size={16} color="var(--accent)" /> (11) 4000-2025</span>
-      <span><Icon name="mail" size={16} color="var(--accent)" /> contato@starkstrong.com.br</span>
-      <span><Icon name="clock" size={16} color="var(--accent)" /> Seg a Sex · 9h às 18h</span>
+      {cfg.enderecoLinha && <span><Icon name="map-pin" size={16} color="var(--accent)" /> {cfg.enderecoLinha}</span>}
+      {cfg.telefone && <span><Icon name="phone" size={16} color="var(--accent)" /> <a href={cfg.telHref}>{cfg.telefone}</a></span>}
+      {cfg.whatsapp && <span><Icon name="message-circle" size={16} color="var(--accent)" /> <a href={cfg.whatsappHref} target="_blank" rel="noopener">WhatsApp {cfg.whatsapp}</a></span>}
+      {cfg.email && <span><Icon name="mail" size={16} color="var(--accent)" /> <a href={cfg.emailHref}>{cfg.email}</a></span>}
+      {cfg.horario && <span><Icon name="clock" size={16} color="var(--accent)" /> {cfg.horario}</span>}
     </div>
   </div>
   <div class="hm-footer__pay">
@@ -39,5 +51,11 @@ const steps = ['Projeto', 'Fabricação', 'Logística', 'Instalação', 'Suporte
     </div>
     <span class="hm-footer__secure"><Icon name="shield-check" size={15} color="var(--accent)" /> Solução end-to-end · suporte próprio</span>
   </div>
-  <div class="hm-footer__bottom">© 2025 Stark Strong · CNPJ 00.000.000/0001-00 · Todos os direitos reservados · A performance é inevitável.</div>
+  <div class="hm-footer__bottom">
+    <span>© 2025 Stark Strong · CNPJ 54.744.558/0001-00 · Todos os direitos reservados · A performance é inevitável. · Por <a class="hm-footer__credit" href="https://www.procuradaagencia.com.br" target="_blank" rel="noopener">PROCURADA</a></span>
+    <span class="hm-footer__legal">
+      <a href="/politica-de-privacidade">Política de Privacidade</a>
+      <a href="/termos-e-condicoes">Termos e Condições</a>
+    </span>
+  </div>
 </footer>

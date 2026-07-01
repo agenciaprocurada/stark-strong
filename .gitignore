@@ -9,8 +9,14 @@ npm-debug.log*
 # environment
 .env
 .env.production
+# acessos/credenciais locais (não versionar)
+ACESSOS.md
 # os
 .DS_Store
 Thumbs.db
 # design reference (temporária — será removida)
 _design-claude/
+# uploads temporários (copiar p/ public/ antes de usar — não versionar)
+_uploads/
+# artefatos de ferramentas locais
+.impeccable/

@@ -11,59 +11,126 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
       </a>
       <span class="adm-ph__spacer"></span>
       <button class="adm-btn adm-btn--ghost adm-btn--md" type="button" data-cancel>Cancelar</button>
-      <button class="adm-btn adm-btn--primary adm-btn--md" type="submit" form="bannerForm" data-save>Salvar</button>
+      <button class="adm-btn adm-btn--primary adm-btn--md" type="submit" form="bannerForm" data-save hidden>Salvar</button>
     </div>
 
     <h1 class="adm-ph__title" data-title style="margin-bottom:20px">Novo banner</h1>
 
-    <div class="adm-msg adm-msg--err" data-err hidden></div>
-    <div class="adm-msg adm-msg--ok" data-ok hidden></div>
+    <div class="adm-msg adm-msg--err" data-err hidden aria-live="polite"></div>
+    <div class="adm-msg adm-msg--ok" data-ok hidden aria-live="polite"></div>
 
-    <form id="bannerForm" class="adm-form">
-      <!-- Coluna principal -->
+    <!-- ===== Escolha do tipo (só ao criar) ===== -->
+    <div data-chooser hidden>
+      <p class="adm-help" style="margin-bottom:14px">Que tipo de banner você quer criar? Veja como cada um aparece na home e escolha:</p>
+      <div class="bn-choose">
+        <button type="button" class="bn-choose__card" data-choose="editavel">
+          <span class="bn-mock bn-mock--txt" aria-hidden="true">
+            <span class="bn-mock__lines"><i></i><i></i><span class="bn-mock__btns"><b></b><b></b></span></span>
+            <span class="bn-mock__photo"></span>
+          </span>
+          <span class="bn-choose__t">Banner com texto</span>
+          <span class="bn-choose__d">Você escreve título, subtítulo e botões sobre uma foto de fundo.</span>
+        </button>
+        <button type="button" class="bn-choose__card" data-choose="imagem">
+          <span class="bn-mock bn-mock--img" aria-hidden="true"><span class="bn-mock__full"></span></span>
+          <span class="bn-choose__t">Banner de imagem pronta</span>
+          <span class="bn-choose__d">Você envia uma arte já finalizada (desktop + mobile), com cor de fundo e link.</span>
+        </button>
+      </div>
+    </div>
+
+    <form id="bannerForm" class="adm-form" hidden>
+      <!-- ===== Coluna principal ===== -->
       <div class="adm-card adm-card-pad adm-stack">
-        <div class="adm-field">
-          <label class="adm-label" for="eyebrow">Texto de apoio (acima do título)</label>
-          <input class="adm-input" id="eyebrow" name="eyebrow" placeholder="Ex.: Linha profissional 2025" />
+        <!-- ----- BANNER COM TEXTO ----- -->
+        <div class="adm-stack" data-only="editavel">
+          <div class="adm-field">
+            <label class="adm-label" for="eyebrow">Texto de apoio (acima do título)</label>
+            <input class="adm-input" id="eyebrow" name="eyebrow" placeholder="Ex.: Linha profissional 2025" />
+          </div>
+
+          <div class="adm-field" data-field="titulo">
+            <label class="adm-label" for="titulo">Título <span class="bn-req" title="Obrigatório">*</span></label>
+            <input class="adm-input" id="titulo" name="titulo" placeholder="Ex.: A LINHA QUE TRANSFORMA ACADEMIAS" />
+            <label class="adm-switch" style="margin-top:6px">
+              <input type="checkbox" data-titulo-gold />
+              <span class="adm-switch__track"></span>
+              <span class="adm-switch__label">Destacar o título em dourado</span>
+            </label>
+          </div>
+
+          <div class="adm-field">
+            <label class="adm-label" for="lead">Subtítulo</label>
+            <textarea class="adm-textarea" id="lead" name="lead" placeholder="Texto descritivo (some no mobile)"></textarea>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+            <div class="adm-field">
+              <label class="adm-label" for="b1t">Botão 1 — texto</label>
+              <input class="adm-input" id="b1t" name="botao1_texto" placeholder="Solicitar orçamento" />
+            </div>
+            <div class="adm-field">
+              <label class="adm-label" for="b1l">Botão 1 — link</label>
+              <input class="adm-input" id="b1l" name="botao1_link" placeholder="/produtos" value="/produtos" />
+            </div>
+            <div class="adm-field">
+              <label class="adm-label" for="b2t">Botão 2 — texto</label>
+              <input class="adm-input" id="b2t" name="botao2_texto" placeholder="Linha completa" />
+            </div>
+            <div class="adm-field">
+              <label class="adm-label" for="b2l">Botão 2 — link</label>
+              <input class="adm-input" id="b2l" name="botao2_link" placeholder="/produtos" value="/produtos" />
+            </div>
+          </div>
         </div>
 
-        <div class="adm-field">
-          <label class="adm-label" for="titulo">Título</label>
-          <input class="adm-input" id="titulo" name="titulo" placeholder="Ex.: A LINHA QUE TRANSFORMA ACADEMIAS" />
-          <label class="adm-switch" style="margin-top:6px">
-            <input type="checkbox" data-titulo-gold />
-            <span class="adm-switch__track"></span>
-            <span class="adm-switch__label">Destacar o título em dourado</span>
-          </label>
-        </div>
+        <!-- ----- BANNER DE IMAGEM ----- -->
+        <div class="adm-stack" data-only="imagem">
+          <div class="adm-field" data-up="imagem">
+            <label class="adm-label">Imagem principal — desktop <span class="bn-req" title="Obrigatório">*</span></label>
+            <div class="bn-preview" style="aspect-ratio:16/6">
+              <img data-up-preview alt="" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" style="display:none" />
+              <span data-up-empty class="bn-preview__empty">Nenhuma imagem ainda</span>
+            </div>
+            <label class="adm-dropzone" style="padding:14px;margin-top:8px">
+              <input type="file" accept="image/*" class="bn-file" data-up-file />
+              <span class="adm-dropzone__t" data-up-status>Enviar imagem desktop</span>
+              <span class="adm-dropzone__d">PNG, JPG ou WebP — use uma imagem larga</span>
+            </label>
+            <button type="button" class="bn-linktoggle" data-up-linktoggle>ou colar um link</button>
+            <div data-up-urlwrap hidden style="margin-top:8px">
+              <input class="adm-input" name="imagem" data-up-input placeholder="https://… ou /assets/arquivo.png" style="font-size:12px" />
+            </div>
+          </div>
 
-        <div class="adm-field">
-          <label class="adm-label" for="lead">Subtítulo</label>
-          <textarea class="adm-textarea" id="lead" name="lead" placeholder="Texto descritivo (some no mobile)"></textarea>
-        </div>
+          <div class="adm-field" data-up="imagem_mobile">
+            <label class="adm-label">Imagem — mobile (celular) <span class="bn-req" title="Obrigatório">*</span></label>
+            <div class="bn-preview" style="aspect-ratio:4/3;max-width:240px">
+              <img data-up-preview alt="" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" style="display:none" />
+              <span data-up-empty class="bn-preview__empty">Nenhuma imagem ainda</span>
+            </div>
+            <label class="adm-dropzone" style="padding:14px;margin-top:8px">
+              <input type="file" accept="image/*" class="bn-file" data-up-file />
+              <span class="adm-dropzone__t" data-up-status>Enviar imagem mobile</span>
+              <span class="adm-dropzone__d">Formato vertical/quadrado — pensado para celular</span>
+            </label>
+            <button type="button" class="bn-linktoggle" data-up-linktoggle>ou colar um link</button>
+            <div data-up-urlwrap hidden style="margin-top:8px">
+              <input class="adm-input" name="imagem_mobile" data-up-input placeholder="https://… ou /assets/arquivo-mobile.png" style="font-size:12px" />
+            </div>
+          </div>
 
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
           <div class="adm-field">
-            <label class="adm-label" for="b1t">Botão 1 — texto</label>
-            <input class="adm-input" id="b1t" name="botao1_texto" placeholder="Solicitar orçamento" />
-          </div>
-          <div class="adm-field">
-            <label class="adm-label" for="b1l">Botão 1 — link</label>
-            <input class="adm-input" id="b1l" name="botao1_link" placeholder="/produtos" value="/produtos" />
-          </div>
-          <div class="adm-field">
-            <label class="adm-label" for="b2t">Botão 2 — texto</label>
-            <input class="adm-input" id="b2t" name="botao2_texto" placeholder="Linha completa" />
-          </div>
-          <div class="adm-field">
-            <label class="adm-label" for="b2l">Botão 2 — link</label>
-            <input class="adm-input" id="b2l" name="botao2_link" placeholder="/produtos" value="/produtos" />
+            <label class="adm-label" for="link">Link ao clicar (opcional)</label>
+            <input class="adm-input" id="link" name="link" placeholder="/produtos ou https://…" />
+            <p class="adm-help" style="margin-top:6px">Se preenchido, o banner inteiro vira clicável. Deixe vazio para apenas visual.</p>
           </div>
         </div>
       </div>
 
-      <!-- Trilha lateral -->
+      <!-- ===== Trilha lateral ===== -->
       <div class="adm-form__rail">
+        <!-- publicação (os dois tipos) -->
         <div class="adm-card adm-card--sm adm-card-pad">
           <h3 class="adm-card-h">Publicação</h3>
           <div class="adm-stack">
@@ -72,96 +139,266 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
               <span class="adm-switch__track"></span>
               <span class="adm-switch__label">Ativo (aparece na home)</span>
             </label>
-            <div class="adm-field">
-              <label class="adm-label" for="ordem">Ordem</label>
-              <input class="adm-input" id="ordem" name="ordem" type="number" value="0" style="max-width:120px" />
+            <p class="adm-help">A ordem dos banners é definida arrastando na lista.</p>
+          </div>
+        </div>
+
+        <!-- foto de fundo (só com texto) -->
+        <div class="adm-card adm-card--sm adm-card-pad" data-only="editavel">
+          <h3 class="adm-card-h">Imagem de fundo</h3>
+          <div class="adm-stack" data-up="imagem-editavel">
+            <div class="bn-preview" style="aspect-ratio:16/9">
+              <img data-up-preview src="/assets/photo-machine-hero.png" alt="" />
+            </div>
+            <label class="adm-dropzone" style="padding:14px">
+              <input type="file" accept="image/*" class="bn-file" data-up-file />
+              <span class="adm-dropzone__t" data-up-status>Enviar imagem</span>
+              <span class="adm-dropzone__d">PNG, JPG ou WebP — use imagens largas</span>
+            </label>
+            <button type="button" class="bn-linktoggle" data-up-linktoggle>ou colar um link</button>
+            <div data-up-urlwrap hidden style="margin-top:8px">
+              <input class="adm-input" name="imagem_editavel" data-up-input placeholder="https://… ou /assets/arquivo.png" style="font-size:12px" />
             </div>
           </div>
         </div>
 
-        <div class="adm-card adm-card--sm adm-card-pad">
-          <h3 class="adm-card-h">Imagem de fundo</h3>
+        <!-- aparência (só imagem) -->
+        <div class="adm-card adm-card--sm adm-card-pad" data-only="imagem">
+          <h3 class="adm-card-h">Aparência</h3>
           <div class="adm-stack">
-            <div style="border:1px solid var(--line);border-radius:11px;overflow:hidden;aspect-ratio:16/9;background:#eef1f3">
-              <img data-img-preview src="/assets/photo-machine-hero.png" alt="" style="width:100%;height:100%;object-fit:cover" />
+            <div class="adm-field">
+              <label class="adm-label" for="corHex">Cor de fundo</label>
+              <div style="display:flex;gap:8px;align-items:center">
+                <input type="color" data-cor value="#0a0a0a" aria-label="Selecionar cor de fundo" style="width:44px;height:40px;padding:2px;border:1px solid var(--line-input);border-radius:9px;background:var(--surface);cursor:pointer" />
+                <input class="adm-input" id="corHex" name="cor_fundo" data-cor-hex value="#0a0a0a" style="font-size:13px" />
+              </div>
             </div>
-            <input class="adm-input" name="imagem" data-img-input placeholder="/assets/arquivo.png ou URL" style="font-size:12px" />
-            <label class="adm-dropzone" style="padding:14px">
-              <input type="file" accept="image/*" hidden data-img-file />
-              <span class="adm-dropzone__t" data-img-status>Enviar imagem</span>
-              <span class="adm-dropzone__d">PNG, JPG ou WebP — use imagens largas</span>
-            </label>
+
+            <div class="adm-field">
+              <label class="adm-label">Largura</label>
+              <div style="display:flex;gap:8px" role="group" aria-label="Largura do banner">
+                <button type="button" class="adm-chip is-active" data-larg="full" aria-pressed="true">Full width</button>
+                <button type="button" class="adm-chip" data-larg="limitado" aria-pressed="false">Limitado</button>
+              </div>
+              <p class="adm-help" style="margin-top:6px" data-larg-help>Full: a imagem estica para a largura da tela no desktop.</p>
+            </div>
           </div>
         </div>
       </div>
     </form>
   </div>
 
+  <style>
+    /* garante que o atributo `hidden` vença classes com display (ex.: .adm-form{display:grid}) */
+    [hidden] { display: none !important; }
+
+    .bn-choose { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; max-width: 680px; }
+    .bn-choose__card { display: flex; flex-direction: column; gap: 6px; text-align: left; padding: 16px; border: 1px solid var(--line); border-radius: var(--radius-card-sm); background: var(--surface); cursor: pointer; transition: border-color .14s, background .14s, box-shadow .14s; }
+    .bn-choose__card:hover { border-color: var(--brand-border); background: var(--brand-soft); box-shadow: 0 6px 18px rgba(0,0,0,.06); }
+    .bn-choose__card:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+    .bn-choose__t { font-size: 15px; font-weight: 800; color: var(--ink); }
+    .bn-choose__d { font-size: 12.5px; color: var(--muted-2); line-height: 1.45; }
+    @media (max-width: 560px) { .bn-choose { grid-template-columns: 1fr; } }
+
+    /* mini-prévia desenhada (representa o banner real: fundo escuro, dourado) */
+    .bn-mock { display: block; height: 84px; margin-bottom: 10px; border-radius: 8px; border: 1px solid var(--line); overflow: hidden; background: #0f0f0f; position: relative; }
+    .bn-mock--txt { display: flex; }
+    .bn-mock__lines { flex: 1; padding: 13px; display: flex; flex-direction: column; gap: 6px; justify-content: center; }
+    .bn-mock__lines > i { display: block; height: 6px; border-radius: 3px; background: #555; }
+    .bn-mock__lines > i:nth-child(1) { width: 46%; background: #c9a24a; }
+    .bn-mock__lines > i:nth-child(2) { width: 72%; }
+    .bn-mock__btns { display: flex; gap: 5px; margin-top: 5px; }
+    .bn-mock__btns b { display: block; width: 26px; height: 9px; border-radius: 3px; background: #c9a24a; }
+    .bn-mock__btns b:last-child { background: #5a5a5a; }
+    .bn-mock__photo { width: 42%; background: linear-gradient(135deg, #3a3a3a, #1d1d1d); clip-path: polygon(16% 0, 100% 0, 100% 100%, 0 100%); }
+    .bn-mock--img .bn-mock__full { position: absolute; inset: 0; background: linear-gradient(135deg, #2b2b2b, #404040); }
+    .bn-mock--img .bn-mock__full::after { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 50% 45%, rgba(201,162,74,.28), transparent 62%); }
+
+    .bn-req { color: #cc342f; font-weight: 700; }
+
+    .bn-preview { border: 1px solid var(--line); border-radius: 11px; overflow: hidden; background: #eef1f3; display: flex; align-items: center; justify-content: center; }
+    .bn-preview img { width: 100%; height: 100%; object-fit: cover; }
+    .bn-preview__empty { font-size: 12px; color: var(--muted-3); }
+
+    .bn-linktoggle { margin-top: 8px; background: none; border: none; padding: 2px 0; font: inherit; font-size: 12.5px; color: var(--brand-deep); cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+    .bn-linktoggle:hover { color: var(--brand); }
+
+    /* input de arquivo: oculto visualmente mas alcançável por teclado */
+    .bn-file { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+    .bn-invalid { outline: 2px solid #cc342f; outline-offset: 4px; border-radius: 11px; }
+  </style>
+
   <script>
-    import { requireAuth } from '../../../lib/adminAuth';
-    import { getBanner, createBanner, updateBanner, uploadImagem } from '../../../lib/adminApi';
+    import { guardAccess } from '../../../lib/adminAuth';
+    import { getBanner, createBanner, updateBanner, uploadImagem, getNextBannerOrdem } from '../../../lib/adminApi';
+    import type { BannerTipo, BannerLargura } from '../../../lib/adminApi';
 
     const PLACEHOLDER = '/assets/photo-machine-hero.png';
     const params = new URLSearchParams(location.search);
     let id = params.get('id') ? Number(params.get('id')) : null;
 
     const $ = (s: string) => document.querySelector(s) as HTMLElement;
+    const $$ = (s: string) => [...document.querySelectorAll(s)] as HTMLElement[];
     const form = document.getElementById('bannerForm') as HTMLFormElement;
+    const chooser = $('[data-chooser]');
     const errEl = $('[data-err]'), okEl = $('[data-ok]');
     const saveBtn = $('[data-save]') as HTMLButtonElement;
     const goldEl = $('[data-titulo-gold]') as HTMLInputElement;
 
-    function showErr(m: string) { errEl.textContent = m; errEl.hidden = false; okEl.hidden = true; window.scrollTo({ top: 0, behavior: 'smooth' }); }
-    function showOk(m: string) { okEl.textContent = m; okEl.hidden = false; errEl.hidden = true; }
+    let tipo: BannerTipo | null = null;
+    let largura: BannerLargura = 'full';
+    let ordem = 0; // preservada no editar; calculada no criar
+
+    function showOkHtml(html: string) { okEl.innerHTML = html; okEl.hidden = false; errEl.hidden = true; }
     function field(name: string) { return form.elements.namedItem(name) as HTMLInputElement; }
 
-    /* ---- imagem ---- */
-    const imgInput = $('[data-img-input]') as HTMLInputElement;
-    const imgPreview = $('[data-img-preview]') as HTMLImageElement;
-    const imgFile = $('[data-img-file]') as HTMLInputElement;
-    const imgStatus = $('[data-img-status]');
-    imgInput.addEventListener('input', () => { imgPreview.src = imgInput.value || PLACEHOLDER; });
-    imgFile.addEventListener('change', async () => {
-      const f = imgFile.files?.[0]; if (!f) return;
-      imgStatus.textContent = 'Enviando…';
-      try {
-        const url = await uploadImagem(f, 'banners');
-        imgInput.value = url; imgPreview.src = url;
-        imgStatus.textContent = 'Trocar imagem';
-      } catch (ex) { showErr(ex instanceof Error ? ex.message : 'Falha no upload.'); imgStatus.textContent = 'Enviar imagem'; }
-    });
+    // erro ancorado no campo: mensagem + rola/destaca/foca o campo que faltou
+    function fail(msg: string, anchor?: HTMLElement | null, focusEl?: HTMLElement | null) {
+      errEl.textContent = msg; errEl.hidden = false; okEl.hidden = true;
+      const el = anchor || errEl;
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      if (anchor) { anchor.classList.add('bn-invalid'); setTimeout(() => anchor.classList.remove('bn-invalid'), 1800); }
+      if (focusEl) (focusEl as HTMLInputElement).focus({ preventScroll: true });
+    }
+    function showErr(msg: string) { fail(msg, null); }
+
+    /* ---- uploaders genéricos ---- */
+    type Uploader = { input: HTMLInputElement; setUrl: (u: string) => void; };
+    const uploaders: Record<string, Uploader> = {};
+    function wireUploader(key: string) {
+      const root = $(`[data-up="${key}"]`);
+      if (!root) return;
+      const input = root.querySelector('[data-up-input]') as HTMLInputElement;
+      const preview = root.querySelector('[data-up-preview]') as HTMLImageElement;
+      const empty = root.querySelector('[data-up-empty]') as HTMLElement | null;
+      const file = root.querySelector('[data-up-file]') as HTMLInputElement;
+      const status = root.querySelector('[data-up-status]') as HTMLElement;
+      const linkToggle = root.querySelector('[data-up-linktoggle]') as HTMLElement | null;
+      const urlWrap = root.querySelector('[data-up-urlwrap]') as HTMLElement | null;
+      const baseLabel = status.textContent || 'Enviar imagem';
+
+      const setUrl = (u: string) => {
+        if (u) {
+          preview.src = u; preview.style.display = 'block';
+          if (empty) empty.style.display = 'none';
+          status.textContent = 'Trocar imagem';
+        } else {
+          preview.removeAttribute('src'); preview.style.display = 'none';
+          if (empty) empty.style.display = '';
+          status.textContent = baseLabel;
+        }
+      };
+      input.addEventListener('input', () => setUrl(input.value.trim()));
+      file.addEventListener('change', async () => {
+        const f = file.files?.[0]; if (!f) return;
+        status.textContent = 'Enviando…';
+        try {
+          const url = await uploadImagem(f, 'banners');
+          input.value = url; setUrl(url);
+        } catch (ex) { showErr(ex instanceof Error ? ex.message : 'Falha no upload.'); status.textContent = baseLabel; }
+      });
+      if (linkToggle && urlWrap) {
+        linkToggle.addEventListener('click', () => {
+          urlWrap.hidden = false;
+          linkToggle.style.display = 'none';
+          (urlWrap.querySelector('input') as HTMLInputElement)?.focus();
+        });
+      }
+      uploaders[key] = { input, setUrl };
+    }
+    wireUploader('imagem');
+    wireUploader('imagem_mobile');
+    wireUploader('imagem-editavel');
+
+    /* ---- mostra o formulário do tipo escolhido (e trava o tipo) ---- */
+    function rotulo(t: BannerTipo) { return t === 'imagem' ? 'Banner de imagem pronta' : 'Banner com texto'; }
+    function abrirFormulario(t: BannerTipo) {
+      tipo = t;
+      chooser.hidden = true;
+      form.hidden = false;
+      saveBtn.hidden = false;
+      $$('[data-only]').forEach((b) => (b.hidden = b.dataset.only !== t));
+      if (!id) $('[data-title]').textContent = 'Novo · ' + rotulo(t);
+    }
+    $$('[data-choose]').forEach((b) => b.addEventListener('click', () => abrirFormulario(b.dataset.choose as BannerTipo)));
+
+    /* ---- cor de fundo ---- */
+    const corEl = $('[data-cor]') as HTMLInputElement;
+    const corHexEl = $('[data-cor-hex]') as HTMLInputElement;
+    corEl.addEventListener('input', () => { corHexEl.value = corEl.value; });
+    corHexEl.addEventListener('input', () => { if (/^#[0-9a-fA-F]{6}$/.test(corHexEl.value.trim())) corEl.value = corHexEl.value.trim(); });
+
+    /* ---- largura ---- */
+    const largHelp = $('[data-larg-help]');
+    function applyLargura(l: BannerLargura) {
+      largura = l;
+      $$('[data-larg]').forEach((b) => {
+        const on = b.dataset.larg === l;
+        b.classList.toggle('is-active', on);
+        b.setAttribute('aria-pressed', String(on));
+      });
+      largHelp.textContent = l === 'full'
+        ? 'Full: a imagem estica para a largura da tela no desktop.'
+        : 'Limitado: a imagem fica no tamanho real, centralizada, com a cor de fundo preenchendo as laterais.';
+    }
+    $$('[data-larg]').forEach((b) => b.addEventListener('click', () => applyLargura(b.dataset.larg as BannerLargura)));
+    applyLargura('full');
 
     /* ---- salvar ---- */
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const t = field('titulo').value.trim();
-      if (!t) return showErr('Informe o título.');
+      if (!tipo) return;
 
+      let titulo: { t: string; gold?: boolean }[] = [];
+      if (tipo === 'editavel') {
+        const t = field('titulo').value.trim();
+        if (!t) return fail('Informe o título do banner.', $('[data-field="titulo"]'), field('titulo'));
+        titulo = [{ t, gold: goldEl.checked }];
+      } else {
+        if (!uploaders['imagem'].input.value.trim()) return fail('Envie a imagem principal (desktop).', $('[data-up="imagem"]'));
+        if (!uploaders['imagem_mobile'].input.value.trim()) return fail('Envie a imagem mobile.', $('[data-up="imagem_mobile"]'));
+      }
+
+      // coluna `imagem`: foto de fundo (com texto) OU arte desktop (imagem)
+      const imagem = tipo === 'editavel'
+        ? (uploaders['imagem-editavel'].input.value.trim() || null)
+        : (uploaders['imagem'].input.value.trim() || null);
+
+      const cor = corHexEl.value.trim();
       const payload = {
-        eyebrow: field('eyebrow').value.trim() || null,
-        titulo: [{ t, gold: goldEl.checked }],
-        lead: (form.elements.namedItem('lead') as HTMLTextAreaElement).value.trim() || null,
-        imagem: imgInput.value.trim() || null,
-        botao1_texto: field('botao1_texto').value.trim() || null,
-        botao1_link: field('botao1_link').value.trim() || '/produtos',
-        botao2_texto: field('botao2_texto').value.trim() || null,
-        botao2_link: field('botao2_link').value.trim() || '/produtos',
+        tipo,
+        eyebrow: tipo === 'editavel' ? (field('eyebrow').value.trim() || null) : null,
+        titulo,
+        lead: tipo === 'editavel' ? ((form.elements.namedItem('lead') as HTMLTextAreaElement).value.trim() || null) : null,
+        imagem,
+        imagem_mobile: tipo === 'imagem' ? (uploaders['imagem_mobile'].input.value.trim() || null) : null,
+        cor_fundo: /^#[0-9a-fA-F]{6}$/.test(cor) ? cor : '#0a0a0a',
+        largura: tipo === 'imagem' ? largura : 'full',
+        link: tipo === 'imagem' ? (field('link').value.trim() || null) : null,
+        botao1_texto: tipo === 'editavel' ? (field('botao1_texto').value.trim() || null) : null,
+        botao1_link: tipo === 'editavel' ? (field('botao1_link').value.trim() || '/produtos') : '/produtos',
+        botao2_texto: tipo === 'editavel' ? (field('botao2_texto').value.trim() || null) : null,
+        botao2_link: tipo === 'editavel' ? (field('botao2_link').value.trim() || '/produtos') : '/produtos',
         ativo: (form.elements.namedItem('ativo') as HTMLInputElement).checked,
-        ordem: Number(field('ordem').value) || 0,
+        ordem,
       };
 
       saveBtn.disabled = true; saveBtn.textContent = 'Salvando…';
       try {
         if (id) {
           await updateBanner(id, payload);
-          showOk('Banner salvo.');
+          showOkHtml('Banner salvo ✓ &nbsp; <a href="/admin/banners" style="color:inherit;text-decoration:underline">voltar para a lista</a>');
         } else {
+          ordem = await getNextBannerOrdem();
+          payload.ordem = ordem;
           const novo = await createBanner(payload);
           id = novo.id;
           history.replaceState(null, '', `/admin/banners/editar?id=${id}`);
-          showOk('Banner criado.');
+          showOkHtml('Banner criado ✓ &nbsp; já entrou no fim da lista. <a href="/admin/banners" style="color:inherit;text-decoration:underline">ver na lista de banners</a>');
         }
-        $('[data-title]').textContent = t;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        $('[data-title]').textContent = tipo === 'editavel' ? (titulo[0]?.t || 'Banner com texto') : 'Banner de imagem pronta';
       } catch (ex) {
         showErr(ex instanceof Error ? ex.message : 'Falha ao salvar.');
       } finally {
@@ -173,13 +410,19 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
 
     /* ---- carga inicial ---- */
     (async () => {
-      await requireAuth();
-      if (!id) return;
+      await guardAccess('banners');
+
+      if (!id) { chooser.hidden = false; return; }
+
       try {
         const b = await getBanner(id);
+        const t: BannerTipo = b.tipo === 'imagem' ? 'imagem' : 'editavel';
+        ordem = b.ordem ?? 0;
+        abrirFormulario(t);
+        applyLargura((b.largura as BannerLargura) || 'full');
+
         const linhas = Array.isArray(b.titulo) ? b.titulo : [];
         const tituloStr = linhas.map((l) => l.t).join(' ');
-        $('[data-title]').textContent = tituloStr || 'Editar banner';
         field('titulo').value = tituloStr;
         goldEl.checked = linhas.some((l) => l.gold);
         field('eyebrow').value = b.eyebrow || '';
@@ -189,10 +432,23 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
         field('botao2_texto').value = b.botao2_texto || '';
         field('botao2_link').value = b.botao2_link || '/produtos';
         (form.elements.namedItem('ativo') as HTMLInputElement).checked = b.ativo;
-        field('ordem').value = String(b.ordem);
-        imgInput.value = b.imagem || '';
-        imgPreview.src = b.imagem || PLACEHOLDER;
-        if (b.imagem) imgStatus.textContent = 'Trocar imagem';
+        field('link').value = b.link || '';
+
+        const cor = b.cor_fundo || '#0a0a0a';
+        corEl.value = /^#[0-9a-fA-F]{6}$/.test(cor) ? cor : '#0a0a0a';
+        corHexEl.value = cor;
+
+        if (t === 'imagem') {
+          uploaders['imagem'].input.value = b.imagem || '';
+          uploaders['imagem'].setUrl(b.imagem || '');
+          uploaders['imagem_mobile'].input.value = b.imagem_mobile || '';
+          uploaders['imagem_mobile'].setUrl(b.imagem_mobile || '');
+        } else {
+          uploaders['imagem-editavel'].input.value = b.imagem || '';
+          uploaders['imagem-editavel'].setUrl(b.imagem || PLACEHOLDER);
+        }
+
+        $('[data-title]').textContent = t === 'imagem' ? 'Banner de imagem pronta' : (tituloStr || 'Editar banner');
       } catch (ex) {
         showErr(ex instanceof Error ? ex.message : 'Falha ao carregar.');
       }

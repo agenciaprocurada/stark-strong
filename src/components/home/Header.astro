@@ -1,19 +1,26 @@
 ---
 import Icon from '../core/Icon.astro';
 import Pic from '../core/Pic.astro';
-import { getCategories } from '../../lib/catalog';
+import { getCategories, getSiteConfig, getProducts } from '../../lib/catalog';
+import { preferWebp } from '../../lib/img';
 
 const categories = await getCategories();
+const cfg = await getSiteConfig();
+
+/* índice enxuto p/ sugestões de busca no cliente (nome, categoria, slug, img) */
+const products = await getProducts();
+const searchIndex = products.map((p) => ({ n: p.name, c: p.category, s: p.slug, i: preferWebp(p.img) }));
 ---
 <header class="hm-header">
   <button class="hm-burger" type="button" data-burger aria-label="Abrir menu" aria-expanded="false" aria-controls="hm-mobnav">
     <Icon name="menu" size={22} />
   </button>
   <a class="hm-logo" href="/"><Pic src="/assets/logo-negative.png" alt="Stark Strong" /></a>
-  <form class="hm-search" onsubmit="return false">
+  <form class="hm-search" action="/produtos" method="get" role="search" autocomplete="off">
     <Icon name="search" size={18} color="var(--text-on-dark-muted)" />
-    <input placeholder="Buscar equipamentos, linhas, acessórios..." aria-label="Buscar" />
+    <input name="q" placeholder="Buscar equipamentos, linhas, acessórios..." aria-label="Buscar" role="combobox" aria-expanded="false" aria-autocomplete="list" />
     <button class="hm-search__btn" type="submit" aria-label="Buscar"><Icon name="search" size={16} /></button>
+    <div class="hm-suggest" data-suggest hidden role="listbox"></div>
   </form>
   <div class="hm-actions">
     <button class="hm-iconbtn" type="button" data-oc-open>
@@ -25,15 +32,18 @@ const categories = await getCategories();
 </header>
 
 <div class="hm-mobnav" id="hm-mobnav" hidden>
-  <form class="hm-mobnav__search" onsubmit="return false">
+  <form class="hm-mobnav__search" action="/produtos" method="get" role="search" autocomplete="off">
     <Icon name="search" size={18} color="var(--text-on-dark-muted)" />
-    <input placeholder="Buscar equipamentos..." aria-label="Buscar" />
+    <input name="q" placeholder="Buscar equipamentos..." aria-label="Buscar" role="combobox" aria-expanded="false" aria-autocomplete="list" />
+    <div class="hm-suggest" data-suggest hidden role="listbox"></div>
   </form>
   <nav class="hm-mobnav__cats">
     {categories.map((c) => <a href={`/produtos#${c.slug}`} data-mobnav-link>{c.nome}</a>)}
   </nav>
-  <a class="hm-mobnav__phone" href="tel:+551140002025"><Icon name="headset" size={16} color="var(--accent)" /> Atendimento (11) 4000-2025</a>
+  {cfg.telefone && <a class="hm-mobnav__phone" href={cfg.telHref}><Icon name="headset" size={16} color="var(--accent)" /> Atendimento {cfg.telefone}</a>}
 </div>
+
+<script type="application/json" id="hm-search-data" set:html={JSON.stringify(searchIndex)}></script>
 
 <script>
   const burger = document.querySelector<HTMLElement>('[data-burger]');
@@ -46,4 +56,96 @@ const categories = await getCategories();
     burger.addEventListener('click', () => toggle(nav.hidden));
     nav.querySelectorAll('[data-mobnav-link]').forEach((l) => l.addEventListener('click', () => toggle(false)));
   }
+
+  /* ---------- sugestões de busca (typeahead, 3+ letras) ---------- */
+  type Item = { n: string; c: string; s: string; i: string };
+  const dataEl = document.getElementById('hm-search-data');
+  const ITEMS: Item[] = dataEl ? JSON.parse(dataEl.textContent || '[]') : [];
+  const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  const MIN = 3, TERMS = 7, CARDS = 4;
+  const MAG = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>';
+  const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] as string));
+  /* destaca (negrito) o trecho digitado dentro do nome */
+  const hi = (name: string, term: string) => {
+    const i = name.toLowerCase().indexOf(term.toLowerCase());
+    if (i < 0) return esc(name);
+    return esc(name.slice(0, i)) + '<b>' + esc(name.slice(i, i + term.length)) + '</b>' + esc(name.slice(i + term.length));
+  };
+
+  document.querySelectorAll<HTMLFormElement>('form[role="search"]').forEach((form) => {
+    const input = form.querySelector<HTMLInputElement>('input[name="q"]');
+    const box = form.querySelector<HTMLElement>('[data-suggest]');
+    if (!input || !box) return;
+
+    let active = -1;
+    let rows: HTMLElement[] = [];
+
+    const close = () => {
+      box.hidden = true; box.innerHTML = ''; rows = []; active = -1;
+      input.setAttribute('aria-expanded', 'false');
+    };
+
+    const open = (term: string) => {
+      const raw = term.trim();
+      const q = norm(raw);
+      if (q.length < MIN) return close();
+      const hits = ITEMS.filter((it) => norm(it.n).includes(q) || norm(it.c).includes(q));
+      if (!hits.length) return close();
+
+      const terms = hits.slice(0, TERMS).map((it) =>
+        `<a class="hm-suggest__term" role="option" href="/produto/${encodeURIComponent(it.s)}">
+           <span class="hm-suggest__mag">${MAG}</span><span>${hi(it.n, raw)}</span>
+         </a>`).join('');
+
+      const cards = hits.slice(0, CARDS).map((it) =>
+        `<a class="hm-suggest__card" role="option" href="/produto/${encodeURIComponent(it.s)}">
+           <span class="hm-suggest__thumb"><img src="${it.i}" alt="" loading="lazy" /></span>
+           <span class="hm-suggest__info">
+             <span class="hm-suggest__cat">${esc(it.c)}</span>
+             <span class="hm-suggest__name">${esc(it.n)}</span>
+           </span>
+         </a>`).join('');
+
+      box.innerHTML =
+        `<div class="hm-suggest__cols">
+           <div class="hm-suggest__terms">
+             <p class="hm-suggest__h">Sugestões</p>
+             ${terms}
+           </div>
+           <div class="hm-suggest__cards">
+             <p class="hm-suggest__h">Achados para você</p>
+             ${cards}
+           </div>
+         </div>
+         <a class="hm-suggest__all" href="/produtos?q=${encodeURIComponent(raw)}">
+           Ver todos os resultados para “${esc(raw)}”</a>`;
+
+      rows = [...box.querySelectorAll<HTMLElement>('a')];
+      active = -1;
+      box.hidden = false;
+      input.setAttribute('aria-expanded', 'true');
+    };
+
+    const move = (dir: number) => {
+      if (!rows.length) return;
+      active = (active + dir + rows.length) % rows.length;
+      rows.forEach((r, i) => r.classList.toggle('is-active', i === active));
+      rows[active]?.scrollIntoView({ block: 'nearest' });
+    };
+
+    input.addEventListener('input', () => open(input.value));
+    input.addEventListener('focus', () => { if (input.value.trim().length >= MIN) open(input.value); });
+
+    input.addEventListener('keydown', (e) => {
+      if (box.hidden) return;
+      if (e.key === 'ArrowDown') { e.preventDefault(); move(1); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); move(-1); }
+      else if (e.key === 'Enter') { if (active >= 0) { e.preventDefault(); rows[active].click(); } }
+      else if (e.key === 'Escape') { close(); }
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!form.contains(e.target as Node)) close();
+    });
+  });
 </script>

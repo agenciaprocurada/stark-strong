@@ -41,7 +41,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
   </div>
 
   <script>
-    import { requireAuth } from '../../lib/adminAuth';
+    import { guardAccess } from '../../lib/adminAuth';
     import { listCategorias, createCategoria, updateCategoria, deleteCategoria, slugify, type Categoria } from '../../lib/adminApi';
 
     const listEl = document.querySelector('[data-list]') as HTMLElement;
@@ -142,7 +142,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
     });
 
     (async () => {
-      await requireAuth();
+      await guardAccess('categorias');
       try {
         cats = await listCategorias();
         render();

@@ -1,0 +1,214 @@
+---
+/* Stark Strong — Central de Ajuda. Formulário de contato que monta uma
+   mensagem pré-preenchida e leva o usuário ao WhatsApp da empresa.
+   Sem backend: a submissão é tratada no cliente. Rota: /central-de-ajuda */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import TopBar from '../components/home/TopBar.astro';
+import Header from '../components/home/Header.astro';
+import CategoryNav from '../components/home/CategoryNav.astro';
+import StoreFooter from '../components/home/StoreFooter.astro';
+import Icon from '../components/core/Icon.astro';
+import { getSiteConfig } from '../lib/catalog';
+import '../styles/home.css';
+
+/* WhatsApp da empresa — gerido em /admin/configuracoes (só dígitos, com DDI 55). */
+const cfg = await getSiteConfig();
+const WHATSAPP = cfg.whatsappDigits || '5545999265525';
+
+const intencoes = [
+  'Ajuda',
+  'Solicitação de garantia',
+  'Suporte',
+  'Reclamação',
+  'Acompanhamento de pedido',
+];
+---
+<BaseLayout
+  title="Central de Ajuda — Stark Strong"
+  description="Fale com a Stark Strong. Preencha seus dados e continue o atendimento direto no WhatsApp, com tudo pré-preenchido."
+>
+  <TopBar />
+  <Header />
+  <CategoryNav />
+
+  <section class="hm-section ca">
+    <div class="ca__grid">
+      {/* coluna texto */}
+      <div class="ca__intro" data-reveal="left">
+        <p class="u-overline">Central de ajuda</p>
+        <h1 class="hm-title">COMO PODEMOS <span>AJUDAR?</span></h1>
+        <p class="ca__lead">
+          Preencha os campos ao lado e continue o atendimento direto no <strong>WhatsApp</strong>,
+          com seus dados já preenchidos. É rápido — respondemos {cfg.horario.toLowerCase()}.
+        </p>
+        <ul class="ca__perks">
+          <li><Icon name="message-circle" size={18} color="var(--accent)" /> Atendimento humano e próximo</li>
+          <li><Icon name="clock" size={18} color="var(--accent)" /> Resposta em horário comercial</li>
+          <li><Icon name="shield-check" size={18} color="var(--accent)" /> Seus dados não são armazenados neste site</li>
+        </ul>
+      </div>
+
+      {/* coluna formulário */}
+      <form class="ca__form" data-ca-form data-wa={WHATSAPP} novalidate data-reveal="right">
+        <div class="ss-field">
+          <label class="ss-field__label" for="ca-nome">Nome</label>
+          <input id="ca-nome" name="nome" class="ss-field__input" type="text" autocomplete="name" placeholder="Seu nome completo" required />
+        </div>
+
+        <div class="ss-field">
+          <label class="ss-field__label" for="ca-email">E-mail</label>
+          <input id="ca-email" name="email" class="ss-field__input" type="email" autocomplete="email" placeholder="voce@email.com" required />
+        </div>
+
+        <div class="ss-field">
+          <label class="ss-field__label" for="ca-tel">Telefone (WhatsApp)</label>
+          <input id="ca-tel" name="telefone" class="ss-field__input" type="tel" autocomplete="tel" placeholder="(11) 99999-9999" required />
+        </div>
+
+        <div class="ss-field">
+          <span class="ss-field__label">Você já é cliente?</span>
+          <div class="ca-toggle" data-ca-toggle>
+            <label class="ca-toggle__opt">
+              <input type="radio" name="cliente" value="sim" required />
+              <span>Sim, já sou cliente</span>
+            </label>
+            <label class="ca-toggle__opt">
+              <input type="radio" name="cliente" value="nao" required />
+              <span>Ainda não sou cliente</span>
+            </label>
+          </div>
+        </div>
+
+        {/* condicional: cliente */}
+        <div class="ss-select ca-cond" data-when="sim" hidden>
+          <label class="ss-select__label" for="ca-intencao">Como podemos te ajudar?</label>
+          <div class="ss-select__wrap">
+            <select id="ca-intencao" name="intencao" class="ss-select__el" disabled>
+              <option value="" disabled selected>Selecione o assunto</option>
+              {intencoes.map((i) => <option value={i}>{i}</option>)}
+            </select>
+            <span class="ss-select__caret"></span>
+          </div>
+        </div>
+
+        {/* condicional: não cliente */}
+        <div class="ss-field ca-cond" data-when="nao" hidden>
+          <label class="ss-field__label" for="ca-motivo">Motivo do contato</label>
+          <textarea id="ca-motivo" name="motivo" class="ss-field__input ca-textarea" rows="4" placeholder="Conte rapidamente o motivo do seu contato" disabled></textarea>
+        </div>
+
+        <p class="ca-error" data-ca-error hidden></p>
+
+        <button type="submit" class="ss-btn ss-btn--primary ss-btn--lg ca-submit">
+          <span class="ss-btn__icon"><Icon name="message-circle" size={18} /></span>
+          Continuar no WhatsApp
+        </button>
+        <p class="ca-note">Ao continuar, você será levado ao WhatsApp da Stark Strong com a mensagem pronta.</p>
+      </form>
+    </div>
+  </section>
+
+  <StoreFooter />
+</BaseLayout>
+
+<style>
+  .ca__grid { display: grid; grid-template-columns: .85fr 1fr; gap: 56px; align-items: start; }
+
+  /* intro */
+  .ca__lead { font-size: 16px; line-height: 1.75; color: var(--text-body); margin: 18px 0 24px; max-width: 420px; }
+  .ca__lead strong { color: var(--text-strong); font-weight: 600; }
+  .ca__perks { list-style: none; padding: 0; margin: 0; display: grid; gap: 13px; }
+  .ca__perks li { display: flex; align-items: center; gap: 11px; font-size: 14px; color: var(--text-body); }
+
+  /* form */
+  .ca__form { display: grid; gap: 18px; border: 1px solid var(--border-subtle); border-radius: var(--radius-md);
+    background: var(--surface-card); padding: 32px; box-shadow: var(--shadow-md); }
+  .ca-textarea { resize: vertical; min-height: 96px; font-family: var(--font-body); line-height: 1.6; }
+
+  /* .ss-field/.ss-select têm display:flex, que sobrepõe o atributo [hidden].
+     Esta regra (classe + atributo) tem prioridade maior e faz o ocultar funcionar. */
+  .ca-cond[hidden] { display: none; }
+
+  /* toggle sim/não */
+  .ca-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .ca-toggle__opt { position: relative; cursor: pointer; }
+  .ca-toggle__opt input { position: absolute; opacity: 0; inset: 0; cursor: pointer; }
+  .ca-toggle__opt span { display: flex; align-items: center; justify-content: center; text-align: center;
+    min-height: 48px; padding: 8px 14px; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm);
+    font-family: var(--font-subhead); font-weight: 600; font-size: 13.5px; color: var(--text-body);
+    transition: border-color var(--dur-base), background var(--dur-base), color var(--dur-base); }
+  .ca-toggle__opt input:checked + span { border-color: var(--accent); background: rgba(185,145,75,.10); color: var(--text-strong); }
+  .ca-toggle__opt input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .ca-error { margin: 0; font-size: 13px; color: var(--status-danger); font-weight: 600; }
+  .ca-submit { width: 100%; }
+  .ca-note { margin: 0; font-size: 12px; color: var(--text-muted); text-align: center; }
+
+  @media (max-width: 900px) {
+    .ca__grid { grid-template-columns: 1fr; gap: 32px; }
+    .ca__form { padding: 24px; }
+  }
+  @media (max-width: 420px) {
+    .ca-toggle { grid-template-columns: 1fr; }
+  }
+</style>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>('[data-ca-form]');
+  if (form) {
+    const wa = form.getAttribute('data-wa') || '';
+    const err = form.querySelector<HTMLElement>('[data-ca-error]');
+    const conds = [...form.querySelectorAll<HTMLElement>('.ca-cond')];
+    const radios = [...form.querySelectorAll<HTMLInputElement>('input[name="cliente"]')];
+
+    /* mostra/esconde o bloco condizente com "já é cliente?" e
+       liga/desliga os campos para não validarem quando escondidos */
+    const sync = () => {
+      const val = radios.find((r) => r.checked)?.value || '';
+      conds.forEach((c) => {
+        const on = c.getAttribute('data-when') === val;
+        c.hidden = !on;
+        c.querySelectorAll<HTMLInputElement>('input,select,textarea').forEach((f) => { f.disabled = !on; });
+      });
+    };
+    radios.forEach((r) => r.addEventListener('change', () => { sync(); if (err) err.hidden = true; }));
+
+    const showErr = (msg: string) => { if (err) { err.textContent = msg; err.hidden = false; } };
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const data = new FormData(form);
+      const nome = (data.get('nome') as string || '').trim();
+      const email = (data.get('email') as string || '').trim();
+      const telefone = (data.get('telefone') as string || '').trim();
+      const cliente = data.get('cliente') as string | null;
+
+      if (!nome || !email || !telefone) return showErr('Preencha nome, e-mail e telefone.');
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return showErr('Informe um e-mail válido.');
+      if (!cliente) return showErr('Informe se você já é cliente.');
+
+      const linhas = [
+        'Olá! Vim pela Central de Ajuda do site da Stark Strong.',
+        '',
+        `Nome: ${nome}`,
+        `E-mail: ${email}`,
+        `WhatsApp: ${telefone}`,
+        `Já é cliente: ${cliente === 'sim' ? 'Sim' : 'Não'}`,
+      ];
+
+      if (cliente === 'sim') {
+        const intencao = (data.get('intencao') as string || '').trim();
+        if (!intencao) return showErr('Selecione como podemos te ajudar.');
+        linhas.push(`Assunto: ${intencao}`);
+      } else {
+        const motivo = (data.get('motivo') as string || '').trim();
+        if (!motivo) return showErr('Conte o motivo do seu contato.');
+        linhas.push(`Motivo: ${motivo}`);
+      }
+
+      if (err) err.hidden = true;
+      const url = `https://wa.me/${wa}?text=${encodeURIComponent(linhas.join('\n'))}`;
+      window.open(url, '_blank', 'noopener');
+    });
+  }
+</script>

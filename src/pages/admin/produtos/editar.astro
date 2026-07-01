@@ -104,7 +104,7 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
   </div>
 
   <script>
-    import { requireAuth } from '../../../lib/adminAuth';
+    import { guardAccess } from '../../../lib/adminAuth';
     import {
       listCategorias, getProduto, createProduto, updateProduto,
       listImagens, addImagem, removeImagem, uploadImagem, slugify,
@@ -225,7 +225,7 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
     $('[data-cancel]').addEventListener('click', () => { location.href = '/admin/produtos'; });
 
     (async () => {
-      await requireAuth();
+      await guardAccess('produtos');
       try {
         const cats = await listCategorias();
         const sel = field('categoria_id') as unknown as HTMLSelectElement;

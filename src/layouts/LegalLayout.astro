@@ -1,0 +1,70 @@
+---
+/* Stark Strong — layout para páginas de texto/legais (prosa).
+   Mantém o padrão visual do site (header, nav, footer) e formata o conteúdo
+   passado via <slot /> com tipografia de leitura. */
+import BaseLayout from './BaseLayout.astro';
+import TopBar from '../components/home/TopBar.astro';
+import Header from '../components/home/Header.astro';
+import CategoryNav from '../components/home/CategoryNav.astro';
+import StoreFooter from '../components/home/StoreFooter.astro';
+import '../styles/home.css';
+
+interface Props {
+  title: string;
+  description?: string;
+  eyebrow?: string;
+  heading: string;
+  accent?: string;
+  updated?: string;
+}
+const { title, description, eyebrow = 'Institucional', heading, accent, updated } = Astro.props;
+---
+<BaseLayout title={title} description={description}>
+  <TopBar />
+  <Header />
+  <CategoryNav />
+
+  <section class="hm-section lg-head">
+    <p class="u-overline">{eyebrow}</p>
+    <h1 class="hm-title">{heading}{accent && <span> {accent}</span>}</h1>
+    {updated && <p class="lg-head__updated">Última atualização: {updated}</p>}
+  </section>
+
+  <section class="hm-section lg-body">
+    <article class="lg-prose">
+      <slot />
+    </article>
+  </section>
+
+  <StoreFooter />
+</BaseLayout>
+
+<style>
+  .lg-head { padding-bottom: 0; }
+  .lg-head__updated { margin: 14px 0 0; font-size: 13px; color: var(--text-muted); }
+
+  .lg-body { padding-top: 32px; }
+  .lg-prose { max-width: 820px; }
+  .lg-prose :global(h2) {
+    font-family: var(--font-subhead); font-weight: 700; font-size: 19px;
+    color: var(--text-strong); margin: 34px 0 12px; padding-top: 18px;
+    border-top: 1px solid var(--border-subtle);
+  }
+  .lg-prose :global(h2:first-child) { margin-top: 0; padding-top: 0; border-top: 0; }
+  .lg-prose :global(h3) {
+    font-family: var(--font-subhead); font-weight: 700; font-size: 15px;
+    color: var(--text-strong); margin: 22px 0 8px;
+  }
+  .lg-prose :global(p) { font-size: 15.5px; line-height: 1.75; color: var(--text-body); margin: 0 0 14px; }
+  .lg-prose :global(ul) { margin: 0 0 16px; padding-left: 0; list-style: none; display: grid; gap: 10px; }
+  .lg-prose :global(li) {
+    position: relative; padding-left: 22px; font-size: 15.5px; line-height: 1.65; color: var(--text-body);
+  }
+  .lg-prose :global(li::before) {
+    content: ""; position: absolute; left: 2px; top: 9px; width: 7px; height: 7px;
+    border-radius: 2px; background: var(--accent);
+  }
+  .lg-prose :global(strong) { color: var(--text-strong); font-weight: 600; }
+  .lg-prose :global(a) { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+  .lg-prose :global(em) { color: var(--text-muted); font-style: italic; }
+</style>

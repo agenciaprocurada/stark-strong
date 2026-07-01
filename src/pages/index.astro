@@ -15,12 +15,17 @@ import StoreFooter from '../components/home/StoreFooter.astro';
 import Icon from '../components/core/Icon.astro';
 import Button from '../components/core/Button.astro';
 import Pic from '../components/core/Pic.astro';
-import { getProducts, getFeatured } from '../lib/catalog';
+import { getProducts, getFeatured, getSiteConfig } from '../lib/catalog';
 import '../styles/home.css';
 
 /* ---------- dados de catálogo (build/server) ---------- */
 const allProducts = await getProducts();
 const featured = await getFeatured(6);
+const cfg = await getSiteConfig();
+
+// "Mo-Fr 09:00-17:30" derivado do horário livre (melhor esforço para o Schema.org)
+const _horas = (cfg.horario.match(/\d{1,2}:\d{2}/g) || []);
+const openingHoursLd = _horas.length >= 2 ? `Mo-Fr ${_horas[0]}-${_horas[1]}` : 'Mo-Fr 09:00-17:30';
 
 const SITE_URL = 'https://www.starkstrong.com.br'; // [Suposição] domínio canônico
 const norm = (s: string) =>
@@ -163,10 +168,7 @@ const organizationLd = {
     'Instalação de academia',
     'Fabricação própria de equipamentos fitness',
   ],
-  sameAs: [
-    'https://www.instagram.com/starkstrong',
-    'https://www.youtube.com/@starkstrong',
-  ],
+  sameAs: [cfg.instagram, cfg.youtube].filter(Boolean),
 };
 
 const localBusinessLd = {
@@ -176,18 +178,21 @@ const localBusinessLd = {
   name: 'Stark Strong',
   image: `${SITE_URL}/assets/photo-machine-hero.png`,
   url: SITE_URL,
-  telephone: '+55-11-4000-2025',
+  telephone: cfg.telHref ? cfg.telHref.replace('tel:', '') : '+5545999265525',
+  email: cfg.email || undefined,
   priceRange: '$$$',
   description:
     'Fabricante de equipamentos para academia no Brasil — musculação profissional, projeto, fabricação própria, logística, instalação e suporte.',
   address: {
     '@type': 'PostalAddress',
-    addressLocality: 'São Paulo',
-    addressRegion: 'SP',
+    streetAddress: [cfg.endRua, cfg.endNumero].filter(Boolean).join(', ') || undefined,
+    addressLocality: cfg.endCidade || undefined,
+    addressRegion: cfg.endEstado || undefined,
+    postalCode: cfg.endCep || undefined,
     addressCountry: 'BR',
   },
   areaServed: { '@type': 'Country', name: 'Brasil' },
-  openingHours: 'Mo-Fr 09:00-18:00',
+  openingHours: openingHoursLd,
   parentOrganization: { '@id': `${SITE_URL}/#organization` },
 };
 

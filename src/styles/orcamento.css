@@ -30,7 +30,7 @@
 .oc-empty p{font-size:14px;line-height:1.6;margin:0;max-width:260px}
 
 .oc-item{display:flex;gap:14px;padding:18px 0;border-bottom:1px solid var(--border-on-dark)}
-.oc-item__img{width:64px;height:64px;flex:none;border-radius:var(--radius-sm);object-fit:cover;background:#000}
+.oc-item__img{width:64px;height:64px;flex:none;border-radius:var(--radius-sm);object-fit:contain;background:#fff;padding:5px}
 .oc-item__main{flex:1;min-width:0}
 .oc-item__cat{font-family:var(--font-subhead);font-weight:600;font-size:10px;letter-spacing:.14em;
   text-transform:uppercase;color:var(--accent);margin:0}

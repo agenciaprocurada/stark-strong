@@ -187,6 +187,8 @@ export async function getRelated(p: ViewProduct, n = 3): Promise<ViewProduct[]> 
 
 /* ---------- banners do carrossel da home ---------- */
 export interface ViewBanner {
+  tipo: 'editavel' | 'imagem';
+  // editável
   eyebrow: string;
   title: { t: string; gold?: boolean }[];
   lead: string;
@@ -195,6 +197,111 @@ export interface ViewBanner {
   primaryHref: string;
   secondary: string;
   secondaryHref: string;
+  // imagem
+  imgMobile: string;
+  corFundo: string;
+  largura: 'full' | 'limitado';
+  link: string;
+}
+
+const BANNER_COLS = 'tipo,eyebrow,titulo,lead,imagem,imagem_mobile,cor_fundo,largura,link,botao1_texto,botao1_link,botao2_texto,botao2_link';
+
+/* ---------- configurações do site (contato, endereço, horário) ---------- */
+export interface ViewConfig {
+  telefone: string;
+  telHref: string;       // tel:+55...
+  whatsapp: string;
+  whatsappDigits: string; // só dígitos com DDI 55
+  whatsappHref: string;   // https://wa.me/55...
+  email: string;
+  emailHref: string;      // mailto:
+  endRua: string;
+  endNumero: string;
+  endCidade: string;
+  endEstado: string;
+  endCep: string;
+  enderecoLinha: string;  // "Rua X, 777 — Cascavel/PR · CEP 85817830"
+  cidadeUf: string;       // "Cascavel · PR"
+  horario: string;
+  instagram: string;
+  youtube: string;
+  whatsappSocial: string; // link completo da rede social (cai no wa.me derivado se vazio)
+}
+
+// Defaults reais — usados se a tabela/linha não existir no build (site nunca quebra).
+const CONFIG_FALLBACK = {
+  telefone: '(45) 9 9926-5525',
+  whatsapp: '(45) 9 9926-5525',
+  email: 'vendas@starkstrong.com.br',
+  end_rua: 'Rua Lagoa Ibirapuera',
+  end_numero: '777',
+  end_cidade: 'Cascavel',
+  end_estado: 'PR',
+  end_cep: '85817830',
+  horario: 'Segunda a sexta das 09:00 às 17:30',
+  instagram: 'https://www.instagram.com/starkstrong.br/',
+  youtube: 'https://www.youtube.com/@STARKSTRONG',
+  whatsapp_url: 'https://api.whatsapp.com/send/?phone=5545991036748&text=Ol%C3%A1%21+Vim+pela+loja+online+e+gostaria+de+atendimento.&type=phone_number&app_absent=0',
+};
+
+/** Só dígitos, com DDI 55 do Brasil na frente (para tel: e wa.me). */
+function digitsBR(s: string): string {
+  let d = (s || '').replace(/\D/g, '');
+  if (!d) return '';
+  if (!d.startsWith('55')) d = '55' + d;
+  return d;
+}
+
+function mapConfig(c: any): ViewConfig {
+  const telefone = c.telefone ?? '';
+  const whatsapp = c.whatsapp ?? '';
+  const email = c.email ?? '';
+  const endRua = c.end_rua ?? '';
+  const endNumero = c.end_numero ?? '';
+  const endCidade = c.end_cidade ?? '';
+  const endEstado = c.end_estado ?? '';
+  const endCep = c.end_cep ?? '';
+  const wd = digitsBR(whatsapp);
+  const cidadeUf = [endCidade, endEstado].filter(Boolean).join(' · ');
+  const ruaNum = [endRua, endNumero].filter(Boolean).join(', ');
+  const enderecoLinha = [ruaNum, cidadeUf.replace(' · ', '/'), endCep ? `CEP ${endCep}` : '']
+    .filter(Boolean).join(' — ');
+  return {
+    telefone,
+    telHref: telefone ? `tel:+${digitsBR(telefone)}` : '',
+    whatsapp,
+    whatsappDigits: wd,
+    whatsappHref: wd ? `https://wa.me/${wd}` : '',
+    email,
+    emailHref: email ? `mailto:${email}` : '',
+    endRua, endNumero, endCidade, endEstado, endCep,
+    enderecoLinha,
+    cidadeUf,
+    horario: c.horario ?? '',
+    instagram: c.instagram ?? '',
+    youtube: c.youtube ?? '',
+    whatsappSocial: (c.whatsapp_url ?? '') || (wd ? `https://wa.me/${wd}` : ''),
+  };
+}
+
+let _config: Promise<ViewConfig> | null = null;
+
+export function getSiteConfig(): Promise<ViewConfig> {
+  if (!_config || !CACHE) {
+    _config = supabase
+      .from('configuracoes')
+      .select('telefone,whatsapp,email,end_rua,end_numero,end_cidade,end_estado,end_cep,horario,instagram,youtube,whatsapp_url')
+      .eq('id', 1)
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (error || !data) {
+          if (error && import.meta.env.DEV) console.warn('getSiteConfig:', error.message);
+          return mapConfig(CONFIG_FALLBACK);
+        }
+        return mapConfig(data);
+      });
+  }
+  return _config;
 }
 
 let _banners: Promise<ViewBanner[]> | null = null;
@@ -203,16 +310,17 @@ export function getBanners(): Promise<ViewBanner[]> {
   if (!_banners || !CACHE) {
     _banners = supabase
       .from('banners')
-      .select('eyebrow,titulo,lead,imagem,botao1_texto,botao1_link,botao2_texto,botao2_link')
+      .select(BANNER_COLS)
       .eq('ativo', true)
       .order('ordem')
       .then(({ data, error }) => {
         if (error) {
-          // tabela ainda não existe / falha: home usa o fallback do componente
+          // tabela/colunas ainda não existem ou falha: home usa o fallback do componente
           if (import.meta.env.DEV) console.warn('getBanners:', error.message);
           return [];
         }
         return (data ?? []).map((b: any): ViewBanner => ({
+          tipo: b.tipo === 'imagem' ? 'imagem' : 'editavel',
           eyebrow: b.eyebrow ?? '',
           title: Array.isArray(b.titulo) ? b.titulo : [],
           lead: b.lead ?? '',
@@ -221,6 +329,10 @@ export function getBanners(): Promise<ViewBanner[]> {
           primaryHref: b.botao1_link ?? '/produtos',
           secondary: b.botao2_texto ?? '',
           secondaryHref: b.botao2_link ?? '/produtos',
+          imgMobile: b.imagem_mobile ?? b.imagem ?? PLACEHOLDER_IMG,
+          corFundo: b.cor_fundo ?? '#0a0a0a',
+          largura: b.largura === 'limitado' ? 'limitado' : 'full',
+          link: b.link ?? '',
         }));
       });
   }

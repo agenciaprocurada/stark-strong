@@ -1,0 +1,83 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+---
+
+<AdminLayout title="Minha conta" active="conta">
+  <div class="adm-page">
+    <header class="adm-ph">
+      <div>
+        <p class="adm-ph__over">Sistema</p>
+        <h1 class="adm-ph__title">Minha conta</h1>
+        <p class="adm-ph__desc">Seus dados de acesso e troca de senha.</p>
+      </div>
+    </header>
+
+    <div class="adm-msg adm-msg--err" data-err hidden></div>
+    <div class="adm-msg adm-msg--ok" data-ok hidden></div>
+
+    <div class="adm-conta">
+      <!-- Dados -->
+      <div class="adm-card adm-card--sm adm-card-pad">
+        <h3 class="adm-card-h">Dados</h3>
+        <div class="adm-conta__row"><span class="adm-conta__k">Nome</span><span class="adm-conta__v" data-c-nome>—</span></div>
+        <div class="adm-conta__row"><span class="adm-conta__k">E-mail</span><span class="adm-conta__v" data-c-email>—</span></div>
+        <div class="adm-conta__row"><span class="adm-conta__k">Papel</span><span class="adm-conta__v" data-c-papel>—</span></div>
+      </div>
+
+      <!-- Trocar senha -->
+      <form class="adm-card adm-card--sm adm-card-pad" data-form-senha>
+        <h3 class="adm-card-h">Trocar senha</h3>
+        <div class="adm-field" style="margin-bottom:12px">
+          <label class="adm-label" for="s1">Nova senha</label>
+          <input class="adm-input" id="s1" name="s1" type="password" required minlength="6" placeholder="mín. 6 caracteres" autocomplete="new-password" />
+        </div>
+        <div class="adm-field" style="margin-bottom:16px">
+          <label class="adm-label" for="s2">Confirmar nova senha</label>
+          <input class="adm-input" id="s2" name="s2" type="password" required minlength="6" placeholder="repita a senha" autocomplete="new-password" />
+        </div>
+        <button class="adm-btn adm-btn--primary adm-btn--md" type="submit" data-salvar>Salvar nova senha</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    import { requireAuth, getMeuPerfil, getEmail, changePassword } from '../../lib/adminAuth';
+
+    const errEl = document.querySelector('[data-err]') as HTMLElement;
+    const okEl = document.querySelector('[data-ok]') as HTMLElement;
+    const form = document.querySelector('[data-form-senha]') as HTMLFormElement;
+
+    function showErr(m: string) { errEl.textContent = m; errEl.hidden = false; okEl.hidden = true; }
+    function showOk(m: string) { okEl.textContent = m; okEl.hidden = false; errEl.hidden = true; }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(form);
+      const s1 = String(fd.get('s1'));
+      const s2 = String(fd.get('s2'));
+      if (s1.length < 6) return showErr('A senha precisa ter ao menos 6 caracteres.');
+      if (s1 !== s2) return showErr('As senhas não conferem.');
+      const btn = form.querySelector('[data-salvar]') as HTMLButtonElement;
+      btn.disabled = true;
+      try {
+        await changePassword(s1);
+        form.reset();
+        showOk('Senha alterada com sucesso.');
+      } catch (ex) {
+        showErr(ex instanceof Error ? ex.message : 'Falha ao trocar a senha.');
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    (async () => {
+      await requireAuth();
+      const perfil = await getMeuPerfil().catch(() => null);
+      const email = perfil?.email || (await getEmail());
+      const set = (sel: string, v: string) => { const el = document.querySelector(sel); if (el) el.textContent = v; };
+      set('[data-c-nome]', perfil?.nome || '—');
+      set('[data-c-email]', email || '—');
+      set('[data-c-papel]', perfil?.papel === 'admin' ? 'Administrador' : 'Editor');
+    })();
+  </script>
+</AdminLayout>
